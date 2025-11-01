@@ -1088,6 +1088,7 @@ const abilities = [
 
 
 const items = [
+  // Weapons
   {
     slug: "iron-sword",
     name: "Iron Sword",
@@ -1100,16 +1101,476 @@ const items = [
     },
   },
   {
+    slug: "sunsteel-greatsword",
+    name: "Sunsteel Greatsword",
+    description: "A radiant blade that cleaves through armor with ease.",
+    type: "WEAPON",
+    rarity: "EPIC",
+    slot: "WEAPON",
+    stats: {
+      attack: 14,
+      defense: 4,
+    },
+  },
+  {
+    slug: "soulrender-dagger",
+    name: "Soulrender Dagger",
+    description: "A lightweight dagger that rewards aggressive play.",
+    type: "WEAPON",
+    rarity: "UNCOMMON",
+    slot: "WEAPON",
+    stats: {
+      attack: 8,
+      speed: 4,
+    },
+  },
+  {
+    slug: "wyrmwood-bow",
+    name: "Wyrmwood Bow",
+    description: "Elven craftsmanship grants both power and poise.",
+    type: "WEAPON",
+    rarity: "RARE",
+    slot: "WEAPON",
+    stats: {
+      attack: 10,
+      speed: 5,
+    },
+  },
+  {
+    slug: "stormcall-staff",
+    name: "Stormcall Staff",
+    description: "Focuses lightning into devastating torrents.",
+    type: "WEAPON",
+    rarity: "RARE",
+    slot: "WEAPON",
+    stats: {
+      magic: 12,
+      attack: 4,
+    },
+  },
+  {
+    slug: "emberfocus-scepter",
+    name: "Emberfocus Scepter",
+    description: "A battle-mage favorite that accelerates spellcasting.",
+    type: "WEAPON",
+    rarity: "UNCOMMON",
+    slot: "WEAPON",
+    stats: {
+      magic: 9,
+      speed: 3,
+    },
+  },
+  {
+    slug: "atlas-warhammer",
+    name: "Atlas Warhammer",
+    description: "Crushes foes while keeping the wielder standing.",
+    type: "WEAPON",
+    rarity: "EPIC",
+    slot: "WEAPON",
+    stats: {
+      attack: 16,
+      health: 30,
+    },
+  },
+
+  // Offhands
+  {
+    slug: "aegis-bulwark",
+    name: "Aegis Bulwark",
+    description: "Tower shield that turns aside punishing blows.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "OFFHAND",
+    stats: {
+      defense: 9,
+      health: 25,
+    },
+  },
+  {
+    slug: "spellbinder-codex",
+    name: "Spellbinder Codex",
+    description: "Arcane grimoire storing battle-tested incantations.",
+    type: "ACCESSORY",
+    rarity: "RARE",
+    slot: "OFFHAND",
+    stats: {
+      magic: 10,
+      defense: 4,
+    },
+  },
+  {
+    slug: "shadowglass-dirk",
+    name: "Shadowglass Dirk",
+    description: "A mirrored blade perfect for dual-wielding rogues.",
+    type: "WEAPON",
+    rarity: "UNCOMMON",
+    slot: "OFFHAND",
+    stats: {
+      attack: 6,
+      speed: 3,
+    },
+  },
+  {
+    slug: "hunters-quiver",
+    name: "Hunter's Quiver",
+    description: "Weighted arrows and field tools for ranged specialists.",
+    type: "ACCESSORY",
+    rarity: "UNCOMMON",
+    slot: "OFFHAND",
+    stats: {
+      attack: 5,
+      speed: 2,
+      magic: 2,
+    },
+  },
+  {
+    slug: "totemic-idol",
+    name: "Totemic Idol",
+    description: "Carved charm that channels ancestral vigor.",
+    type: "ACCESSORY",
+    rarity: "RARE",
+    slot: "OFFHAND",
+    stats: {
+      health: 30,
+      magic: 6,
+    },
+  },
+
+  // Headgear
+  {
+    slug: "iron-ward-helm",
+    name: "Iron Ward Helm",
+    description: "Stalwart helm favored by frontline defenders.",
+    type: "ARMOR",
+    rarity: "COMMON",
+    slot: "HEAD",
+    stats: {
+      defense: 6,
+      health: 12,
+    },
+  },
+  {
+    slug: "astral-visor",
+    name: "Astral Visor",
+    description: "Crystalline visor that sharpens arcane insight.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "HEAD",
+    stats: {
+      magic: 8,
+      speed: 3,
+    },
+  },
+  {
+    slug: "windrunner-hood",
+    name: "Windrunner Hood",
+    description: "Lightweight hood embraced by agile skirmishers.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "HEAD",
+    stats: {
+      attack: 4,
+      speed: 4,
+    },
+  },
+  {
+    slug: "seers-tiara",
+    name: "Seer's Tiara",
+    description: "Oracle circlet that grants clarity and poise.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "HEAD",
+    stats: {
+      magic: 6,
+      defense: 4,
+    },
+  },
+  {
+    slug: "stalker-mask",
+    name: "Stalker Mask",
+    description: "Intimidating mask that heightens predatory focus.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "HEAD",
+    stats: {
+      attack: 5,
+      speed: 3,
+    },
+  },
+  {
+    slug: "druidic-circlet",
+    name: "Druidic Circlet",
+    description: "Living wood crown that hums with nature's song.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "HEAD",
+    stats: {
+      magic: 5,
+      health: 15,
+    },
+  },
+
+  // Chest armor
+  {
     slug: "leather-armor",
     name: "Leather Armor",
-    description: "Light armor offering minimal protection.",
+    description: "Light armor offering balanced mobility and protection.",
     type: "ARMOR",
     rarity: "COMMON",
     slot: "CHEST",
     stats: {
       defense: 4,
+      speed: 2,
     },
   },
+  {
+    slug: "bastion-platemail",
+    name: "Bastion Platemail",
+    description: "Heavy plating that anchors a defensive bulwark.",
+    type: "ARMOR",
+    rarity: "EPIC",
+    slot: "CHEST",
+    stats: {
+      defense: 12,
+      health: 40,
+    },
+  },
+  {
+    slug: "shadowweave-robe",
+    name: "Shadowweave Robe",
+    description: "Luminous silk that bends light around the wearer.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "CHEST",
+    stats: {
+      magic: 10,
+      speed: 4,
+    },
+  },
+  {
+    slug: "raiders-jacket",
+    name: "Raider's Jacket",
+    description: "Reinforced leather for relentless hit-and-run tactics.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "CHEST",
+    stats: {
+      attack: 6,
+      speed: 3,
+    },
+  },
+  {
+    slug: "wyrdforged-mail",
+    name: "Wyrdforged Mail",
+    description: "Hybrid mail interwoven with arcane sigils.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "CHEST",
+    stats: {
+      defense: 8,
+      magic: 6,
+    },
+  },
+  {
+    slug: "monastic-wraps",
+    name: "Monastic Wraps",
+    description: "Ascetic garb that centers breath and movement.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "CHEST",
+    stats: {
+      health: 25,
+      speed: 2,
+    },
+  },
+
+  // Hands
+  {
+    slug: "gauntlets-of-fury",
+    name: "Gauntlets of Fury",
+    description: "Brutal gauntlets that add weight to every swing.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "HANDS",
+    stats: {
+      attack: 7,
+      defense: 4,
+    },
+  },
+  {
+    slug: "spellthread-gloves",
+    name: "Spellthread Gloves",
+    description: "Infused fibers that channel mana efficiently.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "HANDS",
+    stats: {
+      magic: 6,
+      speed: 2,
+    },
+  },
+  {
+    slug: "shadowgrip-gloves",
+    name: "Shadowgrip Gloves",
+    description: "Ensures every strike finds a weakness.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "HANDS",
+    stats: {
+      attack: 5,
+      speed: 3,
+    },
+  },
+  {
+    slug: "guardian-mitts",
+    name: "Guardian Mitts",
+    description: "Padded gauntlets that blunt incoming blows.",
+    type: "ARMOR",
+    rarity: "COMMON",
+    slot: "HANDS",
+    stats: {
+      defense: 5,
+      health: 15,
+    },
+  },
+  {
+    slug: "wildgrowth-bracers",
+    name: "Wildgrowth Bracers",
+    description: "Spriggan-grown bark brimming with lifeforce.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "HANDS",
+    stats: {
+      health: 20,
+      magic: 5,
+    },
+  },
+
+  // Legs
+  {
+    slug: "legion-greaves",
+    name: "Legion Greaves",
+    description: "March-forged greaves that never waver.",
+    type: "ARMOR",
+    rarity: "COMMON",
+    slot: "LEGS",
+    stats: {
+      defense: 6,
+      health: 18,
+    },
+  },
+  {
+    slug: "windstep-leggings",
+    name: "Windstep Leggings",
+    description: "Feather-lined leggings for rapid repositioning.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "LEGS",
+    stats: {
+      attack: 4,
+      speed: 5,
+    },
+  },
+  {
+    slug: "archmage-trousers",
+    name: "Archmage Trousers",
+    description: "Woven with sigils that reduce channeling strain.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "LEGS",
+    stats: {
+      magic: 8,
+      speed: 3,
+    },
+  },
+  {
+    slug: "thornroot-breeches",
+    name: "Thornroot Breeches",
+    description: "Interlaced vines that reinforce endurance.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "LEGS",
+    stats: {
+      magic: 4,
+      health: 20,
+    },
+  },
+  {
+    slug: "assailant-pants",
+    name: "Assailant Pants",
+    description: "Tailored for relentless pressure and pursuit.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "LEGS",
+    stats: {
+      attack: 5,
+      defense: 4,
+    },
+  },
+
+  // Feet
+  {
+    slug: "earthshaker-sabatons",
+    name: "Earthshaker Sabatons",
+    description: "Each step quakes with unyielding resolve.",
+    type: "ARMOR",
+    rarity: "RARE",
+    slot: "FEET",
+    stats: {
+      defense: 7,
+      health: 18,
+      attack: 3,
+    },
+  },
+  {
+    slug: "swiftstep-boots",
+    name: "Swiftstep Boots",
+    description: "Favored by messengers and cutpurses alike.",
+    type: "ARMOR",
+    rarity: "COMMON",
+    slot: "FEET",
+    stats: {
+      speed: 6,
+    },
+  },
+  {
+    slug: "runebound-sandals",
+    name: "Runebound Sandals",
+    description: "Sigils traced across the soles quicken spellwork.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "FEET",
+    stats: {
+      magic: 4,
+      speed: 4,
+    },
+  },
+  {
+    slug: "stalker-treads",
+    name: "Stalker Treads",
+    description: "Soft leather to silence even the heaviest step.",
+    type: "ARMOR",
+    rarity: "UNCOMMON",
+    slot: "FEET",
+    stats: {
+      attack: 4,
+      speed: 3,
+    },
+  },
+  {
+    slug: "stalwart-boots",
+    name: "Stalwart Boots",
+    description: "Dependable boots that keep the wearer rooted.",
+    type: "ARMOR",
+    rarity: "COMMON",
+    slot: "FEET",
+    stats: {
+      defense: 5,
+      health: 15,
+    },
+  },
+
+  // Accessories (rings)
   {
     slug: "arcane-ring",
     name: "Arcane Ring",
@@ -1121,6 +1582,131 @@ const items = [
       magic: 5,
     },
   },
+  {
+    slug: "ring-of-sinew",
+    name: "Ring of Sinew",
+    description: "Braided metal that reinforces striking power.",
+    type: "ACCESSORY",
+    rarity: "UNCOMMON",
+    slot: "ACCESSORY_1",
+    stats: {
+      attack: 4,
+      speed: 2,
+    },
+  },
+  {
+    slug: "ring-of-warding",
+    name: "Ring of Warding",
+    description: "Protective sigils etched into tempered steel.",
+    type: "ACCESSORY",
+    rarity: "UNCOMMON",
+    slot: "ACCESSORY_1",
+    stats: {
+      defense: 4,
+      health: 15,
+    },
+  },
+  {
+    slug: "ring-of-focus",
+    name: "Ring of Focus",
+    description: "Keeps casting tempo steady under pressure.",
+    type: "ACCESSORY",
+    rarity: "RARE",
+    slot: "ACCESSORY_1",
+    stats: {
+      magic: 6,
+      speed: 3,
+    },
+  },
+  {
+    slug: "ring-of-vigor",
+    name: "Ring of Vigor",
+    description: "Infuses the wearer with a warrior's stamina.",
+    type: "ACCESSORY",
+    rarity: "UNCOMMON",
+    slot: "ACCESSORY_1",
+    stats: {
+      health: 20,
+      attack: 3,
+    },
+  },
+  {
+    slug: "ring-of-clarity",
+    name: "Ring of Clarity",
+    description: "Balances physical and arcane focus.",
+    type: "ACCESSORY",
+    rarity: "RARE",
+    slot: "ACCESSORY_1",
+    stats: {
+      attack: 4,
+      magic: 4,
+    },
+  },
+
+  // Accessories (amulets & charms)
+  {
+    slug: "amulet-of-resolve",
+    name: "Amulet of Resolve",
+    description: "Steadies the mind against disruptive secrets.",
+    type: "ACCESSORY",
+    rarity: "RARE",
+    slot: "ACCESSORY_2",
+    stats: {
+      defense: 5,
+      magic: 5,
+    },
+  },
+  {
+    slug: "pendant-of-celerity",
+    name: "Pendant of Celerity",
+    description: "Captures a fragment of elemental wind.",
+    type: "ACCESSORY",
+    rarity: "UNCOMMON",
+    slot: "ACCESSORY_2",
+    stats: {
+      speed: 5,
+      attack: 3,
+    },
+  },
+  {
+    slug: "totem-of-bloom",
+    name: "Totem of Bloom",
+    description: "Verdant charm that invigorates spellcasters.",
+    type: "ACCESSORY",
+    rarity: "UNCOMMON",
+    slot: "ACCESSORY_2",
+    stats: {
+      health: 18,
+      magic: 4,
+    },
+  },
+  {
+    slug: "sigil-of-dominion",
+    name: "Sigil of Dominion",
+    description: "An emblem of battlefield command.",
+    type: "ACCESSORY",
+    rarity: "EPIC",
+    slot: "ACCESSORY_2",
+    stats: {
+      attack: 5,
+      defense: 5,
+      magic: 5,
+    },
+  },
+  {
+    slug: "idol-of-echoes",
+    name: "Idol of Echoes",
+    description: "Amplifies lingering spell effects.",
+    type: "ACCESSORY",
+    rarity: "RARE",
+    slot: "ACCESSORY_2",
+    stats: {
+      magic: 6,
+      speed: 2,
+    },
+  },
+
+  // Consumables & materials
   {
     slug: "health-potion",
     name: "Health Potion",
@@ -1135,6 +1721,20 @@ const items = [
     },
   },
   {
+    slug: "focus-tonic",
+    name: "Focus Tonic",
+    description: "A draught that sharpens senses before a duel.",
+    type: "CONSUMABLE",
+    rarity: "UNCOMMON",
+    slot: null,
+    stats: {
+      effect: {
+        speed: 4,
+        magic: 4,
+      },
+    },
+  },
+  {
     slug: "ember-core",
     name: "Ember Core",
     description: "A smoldering ember harvested from a sprite.",
@@ -1144,6 +1744,19 @@ const items = [
     stats: {
       crafting: {
         potency: 2,
+      },
+    },
+  },
+  {
+    slug: "sylvan-spool",
+    name: "Sylvan Spool",
+    description: "Thread of living fiber ready for bespoke garments.",
+    type: "MATERIAL",
+    rarity: "UNCOMMON",
+    slot: null,
+    stats: {
+      crafting: {
+        finesse: 3,
       },
     },
   },
@@ -1218,7 +1831,10 @@ const missions = [
       rolls: [
         { itemSlug: "iron-sword", chance: 0.2 },
         { itemSlug: "leather-armor", chance: 0.25 },
-        { itemSlug: "arcane-ring", chance: 0.1 },
+        { itemSlug: "windrunner-hood", chance: 0.2 },
+        { itemSlug: "swiftstep-boots", chance: 0.2 },
+        { itemSlug: "ring-of-sinew", chance: 0.15 },
+        { itemSlug: "guardian-mitts", chance: 0.15 },
       ],
     },
     enemies: [
@@ -1237,7 +1853,12 @@ const missions = [
     lootTable: {
       guaranteed: [],
       rolls: [
-        { itemSlug: "arcane-ring", chance: 0.3 },
+        { itemSlug: "stormcall-staff", chance: 0.25 },
+        { itemSlug: "shadowweave-robe", chance: 0.2 },
+        { itemSlug: "spellthread-gloves", chance: 0.18 },
+        { itemSlug: "ring-of-focus", chance: 0.22 },
+        { itemSlug: "runebound-sandals", chance: 0.18 },
+        { itemSlug: "focus-tonic", chance: 0.15 },
         { itemSlug: "ember-core", chance: 0.2 },
       ],
     },
