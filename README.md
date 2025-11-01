@@ -103,6 +103,7 @@ All requests funnel through `client/src/api/client.ts` and honour `REACT_APP_API
 
 - `docs/ability-library.md` – Full catalogue of player abilities, class defaults, and engine notes
 - `docs/equipment-library.md` - Gear philosophy, slot-by-slot stat summaries, and rarity guidance
+- `docs/enemy-roster.md` - Biome-based enemy roster with level bands and signature mechanics
 
 ---
 
