@@ -7,6 +7,61 @@ const { getActiveLoadout, getLoadoutById } = require("./loadoutService");
 
 const PRIMARY_STATS = ["health", "attack", "defense", "speed", "magic"];
 
+const clone = (value) => JSON.parse(JSON.stringify(value));
+
+const createStatusInstance = (statusDef = {}) => {
+  const instance = clone(statusDef);
+  instance.type = (instance.name || instance.type || "STATUS").toUpperCase();
+  instance.remaining = instance.duration ?? instance.remaining ?? 1;
+  if (instance.speedModifier) {
+    instance.statModifiers = instance.statModifiers || {};
+    instance.statModifiers.speed = (instance.statModifiers.speed || 0) + instance.speedModifier;
+  }
+  if (instance.defenseMultiplier && !instance.statMultipliers) {
+    instance.statMultipliers = { defense: instance.defenseMultiplier };
+  }
+  delete instance.duration;
+  delete instance.name;
+  delete instance.speedModifier;
+  delete instance.defenseMultiplier;
+  delete instance.chance;
+  return instance;
+};
+
+const pushStatus = (target, statusDef) => {
+  if (!statusDef) return;
+  const status = createStatusInstance(statusDef);
+  if (!status.remaining || status.remaining <= 0) {
+    return;
+  }
+  target.statuses.push(status);
+};
+
+const getEffectiveStat = (actor, stat) => {
+  const base = actor.stats[stat] || 0;
+  const additive = actor.statuses.reduce((sum, status) => {
+    const mods = status.statModifiers || {};
+    return sum + (mods[stat] || 0);
+  }, 0);
+  const multiplier = actor.statuses.reduce((product, status) => {
+    const multipliers = status.statMultipliers || {};
+    return product * (multipliers[stat] ?? 1);
+  }, 1);
+  return Math.max(0, (base + additive) * multiplier);
+};
+
+const getDamageReductionFactor = (actor) => {
+  const reduction = actor.statuses.reduce((sum, status) => sum + (status.damageReduction || 0), 0);
+  return Math.min(0.9, reduction);
+};
+
+const applyHealing = (actor, amount) => {
+  if (!amount || amount <= 0) return 0;
+  const heal = Math.round(amount);
+  actor.currentHealth = Math.min(actor.maxHealth, actor.currentHealth + heal);
+  return heal;
+};
+
 const extractPrimaryStats = (stats = {}) => {
   const result = {};
   PRIMARY_STATS.forEach((key) => {
@@ -88,16 +143,21 @@ const chooseAbility = (actor, rng) => {
 };
 
 const selectTarget = (ability, actor, allies, opponents, rng) => {
+  const livingAllies = allies.filter((entry) => entry.currentHealth > 0) || [actor];
+  const livingOpponents = opponents.filter((entry) => entry.currentHealth > 0);
+
   switch (ability.target) {
     case "ALLY":
-      return allies.slice().sort((a, b) => a.currentHealth / a.maxHealth - b.currentHealth / b.maxHealth)[0];
+      return (livingAllies.length > 0 ? livingAllies : [actor])
+        .slice()
+        .sort((a, b) => a.currentHealth / a.maxHealth - b.currentHealth / b.maxHealth)[0];
     case "SELF":
       return actor;
     case "AREA":
-      return opponents;
+      return livingOpponents.length > 0 ? livingOpponents : opponents;
     case "ENEMY":
     default:
-      return opponents.reduce((best, candidate) => {
+      return livingOpponents.reduce((best, candidate) => {
         if (!best) return candidate;
         if (candidate.currentHealth <= 0) return best;
         if (best.currentHealth <= 0) return candidate;
@@ -113,9 +173,30 @@ const selectTarget = (ability, actor, allies, opponents, rng) => {
 };
 
 const applyDamage = (source, target, amount) => {
-  const reduced = Math.max(0, Math.round(amount));
-  target.currentHealth = Math.max(0, target.currentHealth - reduced);
-  return reduced;
+  let remaining = Math.max(0, amount || 0);
+  let absorbed = 0;
+
+  target.statuses.forEach((status) => {
+    if (remaining <= 0) return;
+    if (typeof status.shield === "number" && status.shield > 0) {
+      const chunk = Math.min(remaining, status.shield);
+      status.shield -= chunk;
+      remaining -= chunk;
+      absorbed += chunk;
+    }
+  });
+
+  const reduction = getDamageReductionFactor(target);
+  const reduced = remaining * (1 - reduction);
+  const applied = Math.max(0, Math.round(reduced));
+  target.currentHealth = Math.max(0, target.currentHealth - applied);
+
+  return {
+    applied,
+    absorbed,
+    reduced: Math.round(reduced),
+    damageReduction: reduction,
+  };
 };
 
 const resolveAbility = ({
@@ -127,121 +208,185 @@ const resolveAbility = ({
   log,
   round,
 }) => {
-  const target = selectTarget(ability, actor, allies, opponents, rng);
+  const selected = selectTarget(ability, actor, allies, opponents, rng);
+  const targets = Array.isArray(selected)
+    ? selected.filter((entity) => entity.currentHealth > 0)
+    : selected
+    ? [selected]
+    : [];
 
-  if (!target) {
+  if (targets.length === 0) {
     return { action: "SKIP" };
   }
 
-  const scaling = ability.formula?.scaling || {};
-  const getStat = (stat) => actor.stats[stat] || 0;
-  const payload = { ability: ability.slug, action: ability.name };
+  const formula = ability.formula || {};
+  const scaling = formula.scaling || {};
+  const hits = formula.hits || 1;
+  const varianceRange = formula.variance ?? 0.2;
+  const payload = { ability: ability.slug, action: ability.name, targets: [] };
 
-  switch (ability.formula?.type) {
+  const computeScalingTotal = () =>
+    Object.entries(scaling).reduce((total, [stat, multiplier]) => {
+      const statValue = getEffectiveStat(actor, stat);
+      return total + statValue * multiplier;
+    }, 0);
+
+  const applyStatusWithChance = (statusDef, targetEntity) => {
+    if (!statusDef) return null;
+    const chance = statusDef.chance ?? 1;
+    if (rng() > chance) return null;
+    pushStatus(targetEntity, statusDef);
+    return (statusDef.name || statusDef.type || "status").toUpperCase();
+  };
+
+  const addLogEntry = (entry) => {
+    log.push({
+      round,
+      ...entry,
+    });
+  };
+
+  switch ((formula.type || "physical").toLowerCase()) {
     case "healing": {
-      const healBase = ability.basePower + getStat("magic") * (scaling.magic || 0);
-      const amount = Math.round(healBase);
-      const shortage = target.maxHealth - target.currentHealth;
-      const applied = Math.min(amount, shortage);
-      target.currentHealth += applied;
-      payload.target = target.name;
-      payload.heal = applied;
-      log.push({
-        round,
-        actionType: "HEAL",
-        actor: actor.name,
-        target: target.name,
-        value: applied,
-        ability: ability.name,
+      const base = ability.basePower || 0;
+      const scalingTotal = computeScalingTotal();
+      const healAmount = base + scalingTotal;
+
+      targets.forEach((target) => {
+        const applied = applyHealing(target, healAmount);
+        payload.targets.push({ target: target.name, heal: applied });
+        addLogEntry({
+          actionType: "HEAL",
+          actor: actor.name,
+          target: target.name,
+          value: applied,
+          ability: ability.name,
+        });
+
+        if (formula.status) {
+          const appliedStatus = applyStatusWithChance(formula.status, target);
+          if (appliedStatus) {
+            payload.status = appliedStatus;
+          }
+        }
       });
       break;
     }
     case "buff": {
-      const effect = ability.formula?.effect || {};
-      if (effect.defenseMultiplier) {
-        target.statuses.push({
-          type: "BUFF_DEFENSE",
-          multiplier: effect.defenseMultiplier,
-          remaining: effect.duration || 1,
+      const effectTargets = targets.length > 0 ? targets : [actor];
+      effectTargets.forEach((target) => {
+        pushStatus(target, formula.effect);
+        payload.targets.push({ target: target.name, buff: formula.effect });
+        addLogEntry({
+          actionType: "BUFF",
+          actor: actor.name,
+          target: target.name,
+          ability: ability.name,
+          effect: formula.effect,
         });
-      }
-      payload.target = target.name;
-      payload.buff = ability.formula?.effect;
-      log.push({
-        round,
-        actionType: "BUFF",
-        actor: actor.name,
-        target: target.name,
-        ability: ability.name,
-        effect: ability.formula?.effect,
       });
       break;
     }
-    case "magical":
-    case "physical":
     default: {
-      const attackScore =
-        ability.formula?.type === "magical"
-          ? getStat("magic") * (scaling.magic || 1)
-          : getStat("attack") * (scaling.attack || 1);
-      const basePower = ability.basePower || 0;
-      let mitigation = target.stats.defense * 0.4;
+      const scalingTotal = computeScalingTotal();
+      let totalLifeSteal = 0;
 
-      const defenseBuff = target.statuses.find((status) => status.type === "BUFF_DEFENSE");
-      if (defenseBuff) {
-        mitigation *= defenseBuff.multiplier;
-      }
+      targets.forEach((target) => {
+        let targetDamage = 0;
+        let absorbed = 0;
+        const statusApplied = [];
 
-      const variance = 0.9 + rng() * 0.2;
-      const damage = (basePower + attackScore) * variance - mitigation;
-      const applied = applyDamage(actor, target, damage);
-      payload.target = target.name;
-      payload.damage = applied;
-      log.push({
-        round,
-        actionType: "DAMAGE",
-        actor: actor.name,
-        target: target.name,
-        ability: ability.name,
-        value: applied,
+        for (let hit = 0; hit < hits; hit += 1) {
+          const basePower = ability.basePower || 0;
+          let damageBase = basePower + scalingTotal;
+
+          if (formula.finisher) {
+            const threshold = formula.finisher.threshold ?? 0.3;
+            if (target.currentHealth / target.maxHealth <= threshold) {
+              damageBase *= formula.finisher.multiplier ?? 1.5;
+            }
+          }
+
+          const defense = getEffectiveStat(target, "defense");
+          const defenseScaling = formula.defenseScaling ?? 0.4;
+          const armorPen = formula.armorPenetration ?? 0;
+          const mitigation = defense * defenseScaling * (1 - armorPen);
+          const variance = 1 - varianceRange / 2 + rng() * varianceRange;
+          const damage = Math.max(0, damageBase * variance - mitigation);
+          const { applied, absorbed: shielded } = applyDamage(actor, target, damage);
+          targetDamage += applied;
+          absorbed += shielded;
+
+          if (formula.status) {
+            const appliedStatus = applyStatusWithChance(formula.status, target);
+            if (appliedStatus) {
+              statusApplied.push(appliedStatus);
+            }
+          }
+
+          if (target.currentHealth <= 0) {
+            break;
+          }
+        }
+
+        if (formula.lifeSteal && targetDamage > 0) {
+          const healed = applyHealing(actor, targetDamage * formula.lifeSteal);
+          totalLifeSteal += healed;
+        }
+
+        payload.targets.push({
+          target: target.name,
+          damage: targetDamage,
+          absorbed,
+          statuses: statusApplied,
+        });
+
+        addLogEntry({
+          actionType: "DAMAGE",
+          actor: actor.name,
+          target: target.name,
+          ability: ability.name,
+          value: targetDamage,
+        });
       });
 
-      const status = ability.formula?.status;
-      if (status && rng() <= (status.chance || 0)) {
-        target.statuses.push({
-          type: status.name.toUpperCase(),
-          remaining: status.duration || 2,
-          damagePerTurn: status.damagePerTurn || 0,
+      if (totalLifeSteal > 0) {
+        payload.lifeSteal = totalLifeSteal;
+        addLogEntry({
+          actionType: "HEAL",
+          actor: actor.name,
+          target: actor.name,
+          value: totalLifeSteal,
+          ability: ability.name,
+          context: "LIFESTEAL",
         });
-        payload.status = status.name;
       }
       break;
     }
+  }
+
+  if (payload.targets.length === 1) {
+    const [single] = payload.targets;
+    payload.target = single.target;
+    if (single.damage !== undefined) payload.damage = single.damage;
+    if (single.heal !== undefined) payload.heal = single.heal;
+  } else if (payload.targets.length > 1) {
+    payload.target = payload.targets.map((entry) => entry.target).join(", ");
   }
 
   return { action: ability.slug, payload };
 };
 
 const tickStatuses = (actor, log, round) => {
-  const remaining = [];
-  for (const status of actor.statuses) {
-    if (status.type === "BUFF_DEFENSE") {
-      status.remaining -= 1;
-      if (status.remaining > 0) {
-        remaining.push(status);
-      } else {
-        log.push({
-          round,
-          actionType: "STATUS_EXPIRE",
-          actor: actor.name,
-          status: status.type,
-        });
-      }
-      continue;
+  const nextStatuses = [];
+
+  actor.statuses.forEach((status) => {
+    if (typeof status.multiplier === "number" && !status.statMultipliers) {
+      status.statMultipliers = { defense: status.multiplier };
     }
 
     if (status.damagePerTurn) {
-      const damage = Math.round(status.damagePerTurn);
+      const damage = Math.max(0, Math.round(status.damagePerTurn));
       actor.currentHealth = Math.max(0, actor.currentHealth - damage);
       log.push({
         round,
@@ -252,9 +397,27 @@ const tickStatuses = (actor, log, round) => {
       });
     }
 
+    if (status.healPerTurn) {
+      const heal = applyHealing(actor, status.healPerTurn);
+      if (heal > 0) {
+        log.push({
+          round,
+          actionType: "STATUS_HEAL",
+          actor: actor.name,
+          status: status.type,
+          value: heal,
+        });
+      }
+    }
+
+    if (status.remaining === undefined || status.remaining === null) {
+      nextStatuses.push(status);
+      return;
+    }
+
     status.remaining -= 1;
     if (status.remaining > 0) {
-      remaining.push(status);
+      nextStatuses.push(status);
     } else {
       log.push({
         round,
@@ -263,9 +426,20 @@ const tickStatuses = (actor, log, round) => {
         status: status.type,
       });
     }
-  }
+  });
 
-  actor.statuses = remaining;
+  actor.statuses = nextStatuses.filter((status) => {
+    if (typeof status.shield === "number" && status.shield <= 0) {
+      const hasPersistentEffect = Boolean(
+        status.damagePerTurn ||
+          status.healPerTurn ||
+          (status.statModifiers && Object.keys(status.statModifiers).length > 0) ||
+          (status.statMultipliers && Object.keys(status.statMultipliers).length > 0)
+      );
+      return hasPersistentEffect;
+    }
+    return true;
+  });
 };
 
 const allDefeated = (actors) => actors.every((actor) => actor.currentHealth <= 0);
@@ -286,7 +460,7 @@ const simulateCombat = ({
     const order = participants
       .map((actor) => ({
         actor,
-        initiative: actor.stats.speed + rng(),
+        initiative: getEffectiveStat(actor, "speed") + rng(),
       }))
       .sort((a, b) => b.initiative - a.initiative)
       .map((entry) => entry.actor);

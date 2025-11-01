@@ -77,4 +77,87 @@ describe('Combat simulation', () => {
     expect(merged.magic).toBe(3);
     expect(merged.health).toBe(20);
   });
+
+  test('Life drain multi-hit ability damages and heals', () => {
+    const lifeDrainAbility = {
+      slug: 'life-drain-test',
+      name: 'Life Drain Test',
+      basePower: 14,
+      cooldownTurns: 1,
+      target: 'ENEMY',
+      formula: {
+        type: 'magical',
+        hits: 2,
+        scaling: { magic: 0.8 },
+        lifeSteal: 0.5,
+      },
+    };
+
+    const hero = createActorState({
+      id: 'hero-life',
+      name: 'Hero',
+      type: 'CHARACTER',
+      stats: { health: 120, attack: 10, defense: 8, speed: 12, magic: 18 },
+      abilities: buildAbilityState([{ slot: 0, ability: lifeDrainAbility, priority: 0 }]),
+    });
+    hero.currentHealth = 60;
+
+    const enemy = createActorState({
+      id: 'dummy',
+      name: 'Dummy',
+      type: 'ENEMY',
+      stats: { health: 80, attack: 6, defense: 5, speed: 5, magic: 0 },
+      abilities: buildAbilityState([{ slot: 0, ability: enemyAbility, priority: 0 }]),
+    });
+
+    const rng = seedrandom('life-drain');
+    const result = simulateCombat({ characterActor: hero, enemyActors: [enemy], rng, maxRounds: 1 });
+
+    expect(result.log.some((entry) => entry.actionType === 'DAMAGE')).toBe(true);
+    expect(hero.currentHealth).toBeGreaterThan(60);
+    expect(enemy.currentHealth).toBeLessThan(80);
+  });
+
+  test('Renew applies heal over time status', () => {
+    const renewAbility = {
+      slug: 'renew-test',
+      name: 'Renew Test',
+      basePower: 8,
+      cooldownTurns: 1,
+      target: 'ALLY',
+      formula: {
+        type: 'healing',
+        scaling: { magic: 0.3 },
+        status: {
+          name: 'renew',
+          chance: 1,
+          healPerTurn: 10,
+          duration: 3,
+        },
+      },
+    };
+
+    const hero = createActorState({
+      id: 'cleric',
+      name: 'Cleric',
+      type: 'CHARACTER',
+      stats: { health: 100, attack: 8, defense: 9, speed: 9, magic: 20 },
+      abilities: buildAbilityState([{ slot: 0, ability: renewAbility, priority: 0 }]),
+    });
+    hero.currentHealth = 50;
+
+    const passiveEnemy = createActorState({
+      id: 'stoic',
+      name: 'Stoic',
+      type: 'ENEMY',
+      stats: { health: 120, attack: 0, defense: 5, speed: 5, magic: 0 },
+      abilities: buildAbilityState([{ slot: 0, ability: { ...enemyAbility, basePower: 0 }, priority: 0 }]),
+    });
+
+    const rng = seedrandom('renew-hot');
+    simulateCombat({ characterActor: hero, enemyActors: [passiveEnemy], rng, maxRounds: 3 });
+
+    expect(hero.currentHealth).toBeGreaterThan(50);
+    expect(hero.currentHealth).toBeLessThanOrEqual(hero.maxHealth);
+  });
 });

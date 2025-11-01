@@ -99,6 +99,10 @@ All requests funnel through `client/src/api/client.ts` and honour `REACT_APP_API
 - `npm run build` – ensures the React client compiles
 - Health check – `curl http://localhost:5000/api/health` should return `{ "status": "OK" }`
 
+## 📚 Game Content Reference
+
+- `docs/ability-library.md` – Full catalogue of player abilities, class defaults, and engine notes
+
 ---
 
 *Inspired by the original Pandimus MMORPG by Bitroit*
