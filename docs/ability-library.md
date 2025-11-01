@@ -37,6 +37,7 @@ Pandimus Reborn now offers fifty-two distinct abilities spanning martial weapon 
 - **Firebolt** (`firebolt`) - Core fire projectile with burn chance.
 - **Flame Wave** (`flame_wave`) - Rolling fire AoE that ignites multiple foes.
 - **Inferno** (`inferno`) - High-variance finisher that applies severe burning.
+- **Meteor Swarm** (`meteor_swarm`) - Elite-tier meteor shower that scorches all enemies and inflicts heavy burns.
 - **Ice Shard** (`ice_shard`) - Heavy chill that manipulates initiative order.
 - **Hailstorm** (`hailstorm`) - Triple-hit frost storm applying short slows.
 - **Frost Barrier** (`frost_barrier`) - Defensive ice shell with shield and mitigation.
@@ -50,6 +51,7 @@ Pandimus Reborn now offers fifty-two distinct abilities spanning martial weapon 
 - **Arcane Barrier** (`arcane_barrier`) - Mana shield with defense scaling and barrier HP.
 - **Mana Burn** (`mana_burn`) - Magic stat reduction over time plus damage.
 - **Starfall** (`starfall`) - High variance meteor shower striking all enemies.
+- **Void Rift** (`void_rift`) - Tears reality to drain magic and has a high chance to skip enemy turns.
 
 ## Shadow, Nature & Toxins
 
@@ -57,6 +59,7 @@ Pandimus Reborn now offers fifty-two distinct abilities spanning martial weapon 
 - **Poison Cloud** (`poison_cloud`) - Area DoT applying poison to every target.
 - **Wild Growth** (`wild_growth`) - Strong HoT scaling with magic for nature healers.
 - **Entangling Roots** (`entangling_roots`) - Root that enforces the new skip-turn mechanic while slashing speed.
+- **Grave Chill** (`grave_chill`) - Harsh debuff that suppresses attack and speed simultaneously.
 
 ## Divine & Supportive Magic
 
@@ -71,6 +74,8 @@ Pandimus Reborn now offers fifty-two distinct abilities spanning martial weapon 
 - **Stone Skin** (`stone_skin`) - High-magnitude defense multiplier for tanks.
 - **Smite** (`smite`) - Holy strike that leaves a radiant mark reducing defense.
 - **Radiant Blast** (`radiant_blast`) - Area holy spell that dazzles foes, lowering attack.
+- **Crystalline Spines** (`crystalline_spines`) - Elite defensive buff stacking shields and heavy damage reduction.
+- **Phoenix Rebirth** (`phoenix_rebirth`) - Self-renewing flames that heal each turn and absorb lethal bursts.
 
 > The full data structure (base power, scaling, cooldowns, status payloads, and tags) lives in `prisma/seed.js`. Use that file when balancing or extending the move set.
 
