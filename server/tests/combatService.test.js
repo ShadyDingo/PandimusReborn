@@ -160,4 +160,89 @@ describe('Combat simulation', () => {
     expect(hero.currentHealth).toBeGreaterThan(50);
     expect(hero.currentHealth).toBeLessThanOrEqual(hero.maxHealth);
   });
+
+  test('Stun causes affected enemy to skip their action', () => {
+    const stunAbility = {
+      slug: 'shield-bash-test',
+      name: 'Shield Bash Test',
+      basePower: 8,
+      cooldownTurns: 1,
+      target: 'ENEMY',
+      formula: {
+        type: 'physical',
+        scaling: { attack: 0.4, defense: 0.6 },
+        status: {
+          name: 'stunned',
+          chance: 1,
+          skipTurn: true,
+          duration: 1,
+          isDebuff: true,
+        },
+      },
+    };
+
+    const hero = createActorState({
+      id: 'guardian',
+      name: 'Guardian',
+      type: 'CHARACTER',
+      stats: { health: 150, attack: 12, defense: 14, speed: 11, magic: 4 },
+      abilities: buildAbilityState([{ slot: 0, ability: stunAbility, priority: 0 }]),
+    });
+
+    const enemy = createActorState({
+      id: 'raider',
+      name: 'Raider',
+      type: 'ENEMY',
+      stats: { health: 120, attack: 14, defense: 6, speed: 8, magic: 0 },
+      abilities: buildAbilityState([{ slot: 0, ability: enemyAbility, priority: 0 }]),
+    });
+
+    const rng = seedrandom('stun-test');
+    const result = simulateCombat({ characterActor: hero, enemyActors: [enemy], rng, maxRounds: 2 });
+
+    expect(result.log.some((entry) => entry.actionType === 'STATUS_SKIP' && entry.actor === 'Raider')).toBe(true);
+  });
+
+  test('Purify removes negative statuses from the caster', () => {
+    const purifyAbility = {
+      slug: 'purify-test',
+      name: 'Purify Test',
+      basePower: 6,
+      cooldownTurns: 1,
+      target: 'ALLY',
+      formula: {
+        type: 'healing',
+        scaling: { magic: 0.2 },
+        cleanse: true,
+      },
+    };
+
+    const hero = createActorState({
+      id: 'priest',
+      name: 'Priest',
+      type: 'CHARACTER',
+      stats: { health: 110, attack: 6, defense: 8, speed: 10, magic: 22 },
+      abilities: buildAbilityState([{ slot: 0, ability: purifyAbility, priority: 0 }]),
+    });
+    hero.currentHealth = 70;
+    hero.statuses.push({
+      type: 'POISON',
+      isDebuff: true,
+      damagePerTurn: 4,
+      remaining: 2,
+    });
+
+    const dummy = createActorState({
+      id: 'sparring',
+      name: 'Sparring Target',
+      type: 'ENEMY',
+      stats: { health: 150, attack: 0, defense: 5, speed: 5, magic: 0 },
+      abilities: buildAbilityState([{ slot: 0, ability: { ...enemyAbility, basePower: 0 }, priority: 0 }]),
+    });
+
+    const rng = seedrandom('purify-test');
+    simulateCombat({ characterActor: hero, enemyActors: [dummy], rng, maxRounds: 2 });
+
+    expect(hero.statuses.some((status) => status.isDebuff)).toBe(false);
+  });
 });

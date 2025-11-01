@@ -37,6 +37,12 @@ const pushStatus = (target, statusDef) => {
   target.statuses.push(status);
 };
 
+const removeDebuffs = (target) => {
+  const before = target.statuses.length;
+  target.statuses = target.statuses.filter((status) => !status.isDebuff);
+  return before - target.statuses.length;
+};
+
 const getEffectiveStat = (actor, stat) => {
   const base = actor.stats[stat] || 0;
   const additive = actor.statuses.reduce((sum, status) => {
@@ -269,6 +275,20 @@ const resolveAbility = ({
             payload.status = appliedStatus;
           }
         }
+
+        if (formula.cleanse) {
+          const removed = removeDebuffs(target);
+          if (removed > 0) {
+            payload.cleanse = (payload.cleanse || 0) + removed;
+            addLogEntry({
+              actionType: "STATUS_CLEANSE",
+              actor: actor.name,
+              target: target.name,
+              ability: ability.name,
+              value: removed,
+            });
+          }
+        }
       });
       break;
     }
@@ -284,6 +304,20 @@ const resolveAbility = ({
           ability: ability.name,
           effect: formula.effect,
         });
+
+        if (formula.cleanse) {
+          const removed = removeDebuffs(target);
+          if (removed > 0) {
+            payload.cleanse = (payload.cleanse || 0) + removed;
+            addLogEntry({
+              actionType: "STATUS_CLEANSE",
+              actor: actor.name,
+              target: target.name,
+              ability: ability.name,
+              value: removed,
+            });
+          }
+        }
       });
       break;
     }
@@ -365,6 +399,17 @@ const resolveAbility = ({
     }
   }
 
+  if (formula.selfStatus) {
+    pushStatus(actor, formula.selfStatus);
+    addLogEntry({
+      actionType: "BUFF",
+      actor: actor.name,
+      target: actor.name,
+      ability: ability.name,
+      effect: formula.selfStatus,
+    });
+  }
+
   if (payload.targets.length === 1) {
     const [single] = payload.targets;
     payload.target = single.target;
@@ -379,8 +424,13 @@ const resolveAbility = ({
 
 const tickStatuses = (actor, log, round) => {
   const nextStatuses = [];
+  const skipStatuses = [];
 
   actor.statuses.forEach((status) => {
+    if (status.skipTurn) {
+      skipStatuses.push(status);
+    }
+
     if (typeof status.multiplier === "number" && !status.statMultipliers) {
       status.statMultipliers = { defense: status.multiplier };
     }
@@ -416,7 +466,7 @@ const tickStatuses = (actor, log, round) => {
     }
 
     status.remaining -= 1;
-    if (status.remaining > 0) {
+    if (status.remaining >= 0) {
       nextStatuses.push(status);
     } else {
       log.push({
@@ -438,8 +488,13 @@ const tickStatuses = (actor, log, round) => {
       );
       return hasPersistentEffect;
     }
+    if (status.remaining !== undefined && status.remaining < 0) {
+      return false;
+    }
     return true;
   });
+
+  return { skipStatuses };
 };
 
 const allDefeated = (actors) => actors.every((actor) => actor.currentHealth <= 0);
@@ -468,8 +523,20 @@ const simulateCombat = ({
     for (const actor of order) {
       if (actor.currentHealth <= 0) continue;
 
-      tickStatuses(actor, log, rounds);
+      const { skipStatuses } = tickStatuses(actor, log, rounds);
       if (actor.currentHealth <= 0) continue;
+
+      if (skipStatuses.length > 0) {
+        const statusNames = skipStatuses.map((status) => status.type);
+        log.push({
+          round: rounds,
+          actionType: "STATUS_SKIP",
+          actor: actor.name,
+          status: statusNames[0],
+          statuses: statusNames,
+        });
+        continue;
+      }
 
       const allies = actor.type === "CHARACTER" ? [characterActor] : enemyActors;
       const opponents = actor.type === "CHARACTER" ? enemyActors : [characterActor];

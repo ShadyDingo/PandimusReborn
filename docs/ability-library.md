@@ -1,46 +1,92 @@
 # Ability Library Overview
 
-Pandimus Reborn now ships with an expanded catalogue of combat skills that lean into three archetypes: martial, arcane, and support. Every ability is represented in the database seed (`prisma/seed.js`) and is compatible with the automated combat loop after the recent engine upgrades.
+Pandimus Reborn now offers fifty-two distinct abilities spanning martial weapon arts, ranged technique, elemental sorcery, nature magic, and restorative or divine support. Every entry below ships with the database seed (`prisma/seed.js`) and is exercised by the automated combat engine.
 
-## Martial Techniques
+## Weapon Arts & Close Combat
 
-- **Slash** (`slash`) - Fast single strike with mild variance; default opener for melee classes.
-- **Guard** (`guard`) - One-round defensive stance that multiplies defense and adds 25% damage reduction.
-- **Power Strike** (`power_strike`) - Heavy overhead swing tuned for burst windows; lower defense scaling so armor doesn't negate it completely.
-- **Twin Fangs** (`twin_fangs`) - Two rapid hits in one action; useful for triggering on-hit effects or finishing low-health foes.
-- **Bleeding Edge** (`bleeding_edge`) - Applies a guaranteed bleed (8 damage/turn, 3 turns) alongside upfront damage.
-- **Shield Wall** (`shield_wall`) - Two-round mitigation buff stacking defense, damage reduction, and a 25 HP barrier.
-- **Battle Shout** (`battle_shout`) - Three-round self-buff granting +6 attack and a 10% attack multiplier.
-- **Execute** (`execute`) - Finisher that doubles damage against targets below 35% health.
-- **Shadow Step** (`shadow_step`) - Self-buff that grants +6 speed and a 15% attack boost for two rounds.
+- **Slash** (`slash`) - Fast single slashing strike with light variance.
+- **Guard** (`guard`) - One-round brace that multiplies defense and adds 25% mitigation.
+- **Power Strike** (`power_strike`) - Heavy armor-breaking blow tuned for burst turns.
+- **Twin Fangs** (`twin_fangs`) - Two rapid hits to trigger on-hit effects and finishers.
+- **Bleeding Edge** (`bleeding_edge`) - Guaranteed bleed DoT layered over upfront damage.
+- **Shield Wall** (`shield_wall`) - Two-round mitigation stack with shield and damage reduction.
+- **Battle Shout** (`battle_shout`) - Self-buff granting flat attack and a 10% attack multiplier.
+- **Execute** (`execute`) - Finisher that doubles output once foes drop below 35% HP.
+- **Shadow Step** (`shadow_step`) - Self-haste and attack steroid for agile repositioning.
+- **Crushing Blow** (`crushing_blow`) - Bludgeoning strike with improved armor penetration.
+- **Shield Bash** (`shield_bash`) - Stuns targets for a full turn using new skip-turn logic.
+- **Whirlwind** (`whirlwind`) - Two-hit area spin that scales with attack speed buffs.
+- **Rend Armor** (`rend_armor`) - Defense-shredding debuff that softens targets for allies.
+- **Berserker Rage** (`berserker_rage`) - High-risk self buff trading defense for offense.
+- **Fortify** (`fortify`) - Multi-round defensive bulwark with damage reduction.
+- **Reckless Charge** (`reckless_charge`) - High-damage opener that applies a self-exposed debuff.
+- **Earth Shatter** (`earth_shatter`) - Area slam with a chance to stun nearby enemies.
+- **Earth Spike** (`earth_spike`) - Single-target speed debuff representing earthen control.
 
-## Arcane & Elemental Magic
+## Ranged & Precision Techniques
 
-- **Firebolt** (`firebolt`) - Reliable ranged nuke with a 25% chance to ignite (7 damage/turn for 2 rounds).
-- **Ice Shard** (`ice_shard`) - Applies *Chilled* (-4 speed for 2 rounds) on an 85% proc chance, soft-controlling enemy turn order.
-- **Chain Lightning** (`chain_lightning`) - Area spell that hits every opponent with higher variance and a chance to apply a brief speed debuff.
-- **Arcane Barrier** (`arcane_barrier`) - Mana shield that boosts defense, reduces damage by 25%, and adds a 30 HP shield for two rounds.
-- **Mana Burn** (`mana_burn`) - Reduces the target's magic stat by 5 for three rounds while dealing moderate damage.
-- **Life Drain** (`life_drain`) - Dual-purpose shadow spell that heals the caster for 60% of damage dealt.
-- **Poison Cloud** (`poison_cloud`) - Area DoT that poisons every enemy for 10 damage/turn across three rounds.
+- **Piercing Arrow** (`piercing_arrow`) - Armor-ignoring arrow with 50% penetration.
+- **Volley** (`volley`) - Broad arrow fan striking every opponent.
+- **Snipe** (`snipe`) - High-precision, low-variance burst shot.
+- **Hobbling Shot** (`hobbling_shot`) - Reliable speed debuff from range.
+- **Venom Dart** (`venom_dart`) - Poisonous dart with reliable DoT application.
+- **Crippling Poison** (`crippling_poison`) - Weapon coat that reduces attack and speed.
 
-## Restorative & Support Magic
+## Elemental Fire & Frost
 
-- **Healing Light** (`heal`) - Core single-target heal scaling primarily with magic.
-- **Renew** (`renew`) - Applies a HoT that restores 12 HP each turn for three rounds in addition to an initial heal.
-- **Ward of Light** (`ward_of_light`) - Adds a 20% damage reduction aura plus 6 HP of regeneration for three rounds.
+- **Firebolt** (`firebolt`) - Core fire projectile with burn chance.
+- **Flame Wave** (`flame_wave`) - Rolling fire AoE that ignites multiple foes.
+- **Inferno** (`inferno`) - High-variance finisher that applies severe burning.
+- **Ice Shard** (`ice_shard`) - Heavy chill that manipulates initiative order.
+- **Hailstorm** (`hailstorm`) - Triple-hit frost storm applying short slows.
+- **Frost Barrier** (`frost_barrier`) - Defensive ice shell with shield and mitigation.
 
-## Class Defaults
+## Storm & Arcane Mastery
 
-- **Warrior** - `slash`, `power_strike`, `shield_wall`, `battle_shout`
-- **Mage** - `firebolt`, `ice_shard`, `chain_lightning`, `arcane_barrier`
-- **Rogue** - `twin_fangs`, `bleeding_edge`, `shadow_step`, `execute`
-- **Cleric** - `heal`, `renew`, `life_drain`, `ward_of_light`
+- **Chain Lightning** (`chain_lightning`) - Area lightning arc with variance and slow.
+- **Thunderclap** (`thunderclap`) - Shockwave that can stun each enemy for a turn.
+- **Tempest** (`tempest`) - Self storm surge boosting speed and attack.
+- **Gust** (`gust`) - Ally-focused speed buff to re-order turn priority.
+- **Arcane Barrier** (`arcane_barrier`) - Mana shield with defense scaling and barrier HP.
+- **Mana Burn** (`mana_burn`) - Magic stat reduction over time plus damage.
+- **Starfall** (`starfall`) - High variance meteor shower striking all enemies.
+
+## Shadow, Nature & Toxins
+
+- **Life Drain** (`life_drain`) - Shadow siphon healing the caster for 60% of damage dealt.
+- **Poison Cloud** (`poison_cloud`) - Area DoT applying poison to every target.
+- **Wild Growth** (`wild_growth`) - Strong HoT scaling with magic for nature healers.
+- **Entangling Roots** (`entangling_roots`) - Root that enforces the new skip-turn mechanic while slashing speed.
+
+## Divine & Supportive Magic
+
+- **Healing Light** (`heal`) - Baseline single-target heal.
+- **Renew** (`renew`) - Heal plus regen over three turns.
+- **Ward of Light** (`ward_of_light`) - Damage reduction aura paired with passive healing.
+- **Purify** (`purify`) - Heal plus cleanse that removes all debuffs using the new cleanse logic.
+- **Revitalize** (`revitalize`) - Burst heal with follow-up HoT ticks.
+- **Blessing of Vigor** (`blessing_of_vigor`) - Attack and speed buff for allies.
+- **Sanctuary** (`sanctuary`) - Shield + mitigation bubble for a frontline ally.
+- **Spirit Link** (`spirit_link`) - Shared defensive buff for caster and target alike.
+- **Stone Skin** (`stone_skin`) - High-magnitude defense multiplier for tanks.
+- **Smite** (`smite`) - Holy strike that leaves a radiant mark reducing defense.
+- **Radiant Blast** (`radiant_blast`) - Area holy spell that dazzles foes, lowering attack.
+
+> The full data structure (base power, scaling, cooldowns, status payloads, and tags) lives in `prisma/seed.js`. Use that file when balancing or extending the move set.
+
+## Class Default Loadouts
+
+- **Warrior** - `slash`, `shield_bash`, `fortify`, `reckless_charge`
+- **Mage** - `firebolt`, `hailstorm`, `chain_lightning`, `frost_barrier`
+- **Rogue** - `twin_fangs`, `bleeding_edge`, `shadow_step`, `snipe`
+- **Cleric** - `heal`, `purify`, `smite`, `sanctuary`
 
 ## Engine Support Highlights
 
-- Multi-hit abilities, finishing multipliers, life steal, and armor penetration are handled in `server/services/combatService.js` via the upgraded `resolveAbility` flow.
-- Status effects now support damage-over-time, heal-over-time, stat modifiers, damage reduction, and shield values, all ticking through the enhanced `tickStatuses` routine.
-- Area targeting uses the `AREA` ability target flag - see `chain_lightning` and `poison_cloud` for examples.
+- Skip-turn statuses (stuns, roots) now log `STATUS_SKIP` and properly consume rounds.
+- Cleansing effects strip negative statuses flagged with `isDebuff`, logging `STATUS_CLEANSE` entries.
+- `selfStatus` hooks let abilities apply follow-up effects to the caster (e.g., `reckless_charge`, `spirit_link`).
+- Multi-hit damage, finishers, life steal, shields, and armor penetration remain orchestrated by `resolveAbility`.
+- `tickStatuses` handles HoTs, DoTs, shield depletion, and stat modifications each round without losing duration fidelity.
 
-> **Seeding:** Run `npm run prisma:seed` after pulling these changes to populate the new abilities, enemy loadouts, and mission data.
+> **Seeding:** Run `npm run prisma:seed` after pulling these changes to refresh abilities, items, enemies, and missions in your database.

@@ -12,9 +12,9 @@ module.exports = {
     },
     defaultAbilities: [
       { slug: "slash", priority: 0 },
-      { slug: "power_strike", priority: 1 },
-      { slug: "shield_wall", priority: 2 },
-      { slug: "battle_shout", priority: 3 },
+      { slug: "shield_bash", priority: 1 },
+      { slug: "fortify", priority: 2 },
+      { slug: "reckless_charge", priority: 3 },
     ],
     defaultEquipment: [
       { slot: "WEAPON", itemSlug: "iron-sword" },
@@ -41,9 +41,9 @@ module.exports = {
     },
     defaultAbilities: [
       { slug: "firebolt", priority: 0 },
-      { slug: "ice_shard", priority: 1 },
+      { slug: "hailstorm", priority: 1 },
       { slug: "chain_lightning", priority: 2 },
-      { slug: "arcane_barrier", priority: 3 },
+      { slug: "frost_barrier", priority: 3 },
     ],
     defaultEquipment: [
       { slot: "WEAPON", itemSlug: "arcane-ring" },
@@ -71,7 +71,7 @@ module.exports = {
       { slug: "twin_fangs", priority: 0 },
       { slug: "bleeding_edge", priority: 1 },
       { slug: "shadow_step", priority: 2 },
-      { slug: "execute", priority: 3 },
+      { slug: "snipe", priority: 3 },
     ],
     defaultEquipment: [
       { slot: "WEAPON", itemSlug: "iron-sword" },
@@ -97,9 +97,9 @@ module.exports = {
     },
     defaultAbilities: [
       { slug: "heal", priority: 0 },
-      { slug: "renew", priority: 1 },
-      { slug: "life_drain", priority: 2 },
-      { slug: "ward_of_light", priority: 3 },
+      { slug: "purify", priority: 1 },
+      { slug: "smite", priority: 2 },
+      { slug: "sanctuary", priority: 3 },
     ],
     defaultEquipment: [
       { slot: "WEAPON", itemSlug: "iron-sword" },
