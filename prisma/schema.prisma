@@ -1,0 +1,335 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ItemType {
+  WEAPON
+  ARMOR
+  ACCESSORY
+  CONSUMABLE
+  MATERIAL
+}
+
+enum ItemRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum EquipmentSlot {
+  WEAPON
+  OFFHAND
+  HEAD
+  CHEST
+  HANDS
+  LEGS
+  FEET
+  ACCESSORY_1
+  ACCESSORY_2
+}
+
+enum AbilitySchool {
+  PHYSICAL
+  ARCANE
+  DIVINE
+  NATURE
+  SHADOW
+  SUPPORT
+}
+
+enum AbilityTarget {
+  ENEMY
+  ALLY
+  SELF
+  AREA
+}
+
+enum MissionStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CLAIMED
+}
+
+enum EncounterType {
+  MISSION
+  CAMPAIGN
+  BOSS
+  EVENT
+}
+
+enum EncounterStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+}
+
+enum EncounterResult {
+  VICTORY
+  DEFEAT
+  RETREAT
+  ABORTED
+}
+
+enum ActorType {
+  CHARACTER
+  ENEMY
+  SYSTEM
+}
+
+model User {
+  id           String      @id @default(cuid())
+  username     String      @unique
+  email        String?     @unique
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  characters   Character[]
+}
+
+model Character {
+  id             String                   @id @default(cuid())
+  user           User                     @relation(fields: [userId], references: [id])
+  userId         String
+  name           String                   @unique
+  class          String
+  level          Int                      @default(1)
+  experience     Int                      @default(0)
+  gold           Int                      @default(0)
+  powerRating    Int                      @default(0)
+  baseStats      Json
+  lastActiveAt   DateTime                 @default(now())
+  createdAt      DateTime                 @default(now())
+  updatedAt      DateTime                 @updatedAt
+  loadouts       Loadout[]
+  inventoryItems CharacterInventoryItem[]
+  missions       MissionAttempt[]
+  idleSessions   IdleSession[]
+  encounters     CombatEncounter[]
+}
+
+model Item {
+  id          String               @id @default(cuid())
+  slug        String               @unique
+  name        String
+  description String?
+  type        ItemType
+  rarity      ItemRarity           @default(COMMON)
+  slot        EquipmentSlot?
+  stats       Json
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  inventory   CharacterInventoryItem[]
+  loadouts    LoadoutEquipment[]
+}
+
+model Ability {
+  id            String            @id @default(cuid())
+  slug          String            @unique
+  name          String
+  description   String?
+  school        AbilitySchool
+  target        AbilityTarget
+  basePower     Int
+  resourceCost  Int               @default(0)
+  cooldownTurns Int               @default(1)
+  speedModifier Int               @default(0)
+  tags          String[]
+  formula       Json
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  loadouts      LoadoutAbility[]
+  enemies       EnemyAbility[]
+}
+
+model EnemyTemplate {
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  name        String
+  description String?
+  level       Int             @default(1)
+  baseStats   Json
+  tags        String[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  missions    MissionEnemy[]
+  abilities   EnemyAbility[]
+}
+
+model EnemyAbility {
+  id         String         @id @default(cuid())
+  enemy      EnemyTemplate  @relation(fields: [enemyId], references: [id])
+  enemyId    String
+  ability    Ability        @relation(fields: [abilityId], references: [id])
+  abilityId  String
+  priority   Int            @default(0)
+  weight     Int            @default(1)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([enemyId, abilityId])
+}
+
+model CharacterInventoryItem {
+  id          String   @id @default(cuid())
+  character   Character @relation(fields: [characterId], references: [id])
+  characterId String
+  item        Item      @relation(fields: [itemId], references: [id])
+  itemId      String
+  quantity    Int       @default(1)
+  acquiredAt  DateTime  @default(now())
+
+  @@unique([characterId, itemId])
+}
+
+model Loadout {
+  id          String             @id @default(cuid())
+  character   Character          @relation(fields: [characterId], references: [id])
+  characterId String
+  name        String
+  strategy    Json?
+  isActive    Boolean            @default(false)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  abilities   LoadoutAbility[]
+  equipment   LoadoutEquipment[]
+  missions    MissionAttempt[]
+  encounters  CombatEncounter[]
+  idleSessions IdleSession[]
+
+  @@unique([characterId, name])
+}
+
+model LoadoutAbility {
+  id         String    @id @default(cuid())
+  loadout    Loadout   @relation(fields: [loadoutId], references: [id])
+  loadoutId  String
+  ability    Ability   @relation(fields: [abilityId], references: [id])
+  abilityId  String
+  slot       Int
+  priority   Int       @default(0)
+  targeting  Json?
+
+  @@unique([loadoutId, slot])
+}
+
+model LoadoutEquipment {
+  id         String         @id @default(cuid())
+  loadout    Loadout        @relation(fields: [loadoutId], references: [id])
+  loadoutId  String
+  item       Item           @relation(fields: [itemId], references: [id])
+  itemId     String
+  slot       EquipmentSlot
+
+  @@unique([loadoutId, slot])
+}
+
+model Mission {
+  id               String          @id @default(cuid())
+  code             String          @unique
+  name             String
+  description      String?
+  difficultyRating Int             @default(1)
+  durationMinutes  Int             @default(10)
+  baseExperience   Int             @default(50)
+  baseGold         Int             @default(25)
+  lootTable        Json
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  enemies          MissionEnemy[]
+  attempts         MissionAttempt[]
+  idleSessions     IdleSession[]
+  encounters       CombatEncounter[]
+}
+
+model MissionEnemy {
+  id         String         @id @default(cuid())
+  mission    Mission        @relation(fields: [missionId], references: [id])
+  missionId  String
+  enemy      EnemyTemplate  @relation(fields: [enemyId], references: [id])
+  enemyId    String
+  quantity   Int            @default(1)
+  priority   Int            @default(0)
+
+  @@unique([missionId, enemyId])
+}
+
+model MissionAttempt {
+  id           String        @id @default(cuid())
+  mission      Mission       @relation(fields: [missionId], references: [id])
+  missionId    String
+  character    Character     @relation(fields: [characterId], references: [id])
+  characterId  String
+  loadout      Loadout?      @relation(fields: [loadoutId], references: [id])
+  loadoutId    String?
+  status       MissionStatus @default(PENDING)
+  startedAt    DateTime       @default(now())
+  completedAt  DateTime?
+  result       Json?
+  rewards      Json?
+  rewardsClaimed Boolean      @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model CombatEncounter {
+  id             String           @id @default(cuid())
+  character      Character        @relation(fields: [characterId], references: [id])
+  characterId    String
+  loadout        Loadout?         @relation(fields: [loadoutId], references: [id])
+  loadoutId      String?
+  mission        Mission?         @relation(fields: [missionId], references: [id])
+  missionId      String?
+  type           EncounterType    @default(MISSION)
+  status         EncounterStatus  @default(QUEUED)
+  result         EncounterResult?
+  seed           String
+  rounds         Int              @default(0)
+  summary        Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  logs           CombatLogEntry[]
+}
+
+model CombatLogEntry {
+  id           String        @id @default(cuid())
+  encounter    CombatEncounter @relation(fields: [encounterId], references: [id])
+  encounterId  String
+  round        Int
+  actorType    ActorType
+  actorName    String
+  action       String
+  payload      Json
+  createdAt    DateTime      @default(now())
+}
+
+model IdleSession {
+  id            String     @id @default(cuid())
+  character     Character  @relation(fields: [characterId], references: [id])
+  characterId   String
+  mission       Mission?   @relation(fields: [missionId], references: [id])
+  missionId     String?
+  loadout       Loadout?   @relation(fields: [loadoutId], references: [id])
+  loadoutId     String?
+  startedAt     DateTime   @default(now())
+  endedAt       DateTime?
+  hoursOffline  Float      @default(0)
+  rewards       Json?
+  claimed       Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}

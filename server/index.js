@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
+const { prisma } = require('./db/prismaClient');
 
 const app = express();
 const server = http.createServer(app);
@@ -60,17 +61,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve static files
+const clientBuildPath = path.join(__dirname, '..', 'client', 'build');
+app.use(express.static(clientBuildPath));
+
 // Root endpoint
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build/index.html'));
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
-
-// Serve static files
-app.use(express.static(path.join(__dirname, 'client/build')));
 
 // Serve React app for all routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build/index.html'));
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 
 const PORT = process.env.PORT || 5000;
@@ -78,5 +80,14 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Pandimus Reborn Server running on port ${PORT}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
 });
+
+const terminate = async () => {
+  console.log('Shutting down gracefully...');
+  await prisma.$disconnect();
+  process.exit(0);
+};
+
+process.on('SIGINT', terminate);
+process.on('SIGTERM', terminate);
 
 
