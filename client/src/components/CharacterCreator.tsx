@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ClassDefinition } from '../types';
 
 type CharacterCreatorProps = {
@@ -14,10 +14,20 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ classes, onC
 
   const activeClass = classes.find((klass) => klass.key === selectedClass);
 
+  useEffect(() => {
+    if (classes.length === 0) {
+      setSelectedClass('');
+      return;
+    }
+
+    setSelectedClass((current) => (current && classes.some((klass) => klass.key === current) ? current : classes[0].key));
+  }, [classes]);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!selectedClass) return;
-    await onCreate({ name, classKey: selectedClass });
+    const trimmedName = name.trim();
+    if (!selectedClass || !trimmedName) return;
+    await onCreate({ name: trimmedName, classKey: selectedClass });
     setName('');
   };
 
@@ -26,20 +36,24 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ classes, onC
       <h2>Create Your First Champion</h2>
       <p>Choose a class and name to begin shaping your strategy.</p>
 
-      <div className="class-selector">
-        {classes.map((klass) => (
-          <button
-            key={klass.key}
-            type="button"
-            className={klass.key === selectedClass ? 'active' : ''}
-            onClick={() => setSelectedClass(klass.key)}
-            disabled={loading}
-          >
-            <strong>{klass.name}</strong>
-            <span>{klass.description}</span>
-          </button>
-        ))}
-      </div>
+      {classes.length === 0 ? (
+        <p className="empty-state">Class definitions are loading...</p>
+      ) : (
+        <div className="class-selector">
+          {classes.map((klass) => (
+            <button
+              key={klass.key}
+              type="button"
+              className={klass.key === selectedClass ? 'active' : ''}
+              onClick={() => setSelectedClass(klass.key)}
+              disabled={loading}
+            >
+              <strong>{klass.name}</strong>
+              <span>{klass.description}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {activeClass && (
         <div className="class-details">
@@ -58,10 +72,20 @@ export const CharacterCreator: React.FC<CharacterCreatorProps> = ({ classes, onC
       <form className="character-form" onSubmit={handleSubmit}>
         <label>
           Character Name
-          <input value={name} onChange={(event) => setName(event.target.value)} disabled={loading} required />
+          <input
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            disabled={loading || classes.length === 0}
+            autoComplete="off"
+            placeholder="e.g. Arayana"
+            maxLength={24}
+            minLength={2}
+            required
+          />
         </label>
         <button type="submit" disabled={loading || !selectedClass}>
-          {loading ? 'Creating?' : 'Create Character'}
+          {loading ? 'Creating...' : 'Create Character'}
         </button>
       </form>
 

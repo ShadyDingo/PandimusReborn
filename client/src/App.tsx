@@ -228,16 +228,20 @@ const App: React.FC = () => {
   if (!auth) {
     return (
       <div className="app-shell">
-        <AuthPanel onLogin={handleLogin} onRegister={handleRegister} loading={loading} error={errorMessage} />
+        <main className="app-content">
+          <AuthPanel onLogin={handleLogin} onRegister={handleRegister} loading={loading} error={errorMessage} />
+        </main>
       </div>
     );
   }
 
   if (initializing) {
     return (
-      <div className="app-shell loading-state">
-        <div className="spinner" aria-hidden />
-        <p>Preparing your adventure?</p>
+      <div className="app-shell">
+        <main className="app-content loading-state">
+          <div className="spinner" aria-hidden />
+          <p>Preparing your adventure...</p>
+        </main>
       </div>
     );
   }
@@ -245,38 +249,42 @@ const App: React.FC = () => {
   if (!character) {
     return (
       <div className="app-shell">
-        <div className="top-bar">
+        <header className="top-bar">
           <span>{auth.user.username}</span>
           <button onClick={handleLogout}>Logout</button>
-        </div>
-        <CharacterCreator
-          classes={classes}
-          onCreate={handleCreateCharacter}
-          loading={loading}
-          error={errorMessage}
-        />
+        </header>
+        <main className="app-content">
+          <CharacterCreator
+            classes={classes}
+            onCreate={handleCreateCharacter}
+            loading={loading}
+            error={errorMessage}
+          />
+        </main>
       </div>
     );
   }
 
   return (
     <div className="app-shell">
-      <div className="top-bar">
+      <header className="top-bar">
         <span>{auth.user.username}</span>
         <button onClick={handleLogout}>Logout</button>
-      </div>
-      <Dashboard
-        character={character}
-        missions={missions}
-        encounters={encounters}
-        activeIdle={idleSession}
-        onStartCombat={handleStartCombat}
-        onStartIdle={handleStartIdle}
-        onClaimIdle={handleClaimIdle}
-        refreshing={loading}
-        statusMessage={statusMessage}
-        errorMessage={errorMessage}
-      />
+      </header>
+      <main className="app-content">
+        <Dashboard
+          character={character}
+          missions={missions}
+          encounters={encounters}
+          activeIdle={idleSession}
+          onStartCombat={handleStartCombat}
+          onStartIdle={handleStartIdle}
+          onClaimIdle={handleClaimIdle}
+          refreshing={loading}
+          statusMessage={statusMessage}
+          errorMessage={errorMessage}
+        />
+      </main>
     </div>
   );
 };

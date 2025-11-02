@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Character, CombatEncounter, IdleSession, Loadout, Mission } from '../types';
 
 type DashboardProps = {
@@ -24,6 +24,7 @@ const MissionCard: React.FC<{
   <button
     type="button"
     className={`mission-card ${selected ? 'selected' : ''}`}
+    aria-pressed={selected}
     onClick={() => onSelect(mission.id)}
   >
     <header>
@@ -107,6 +108,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
     character.loadouts,
   ]);
 
+  useEffect(() => {
+    if (missions.length === 0) {
+      setSelectedMission(null);
+      return;
+    }
+
+    setSelectedMission((current) => {
+      if (current && missions.some((mission) => mission.id === current)) {
+        return current;
+      }
+      return missions[0].id;
+    });
+  }, [missions]);
+
   const handleStartCombat = async () => {
     if (!selectedMission) return;
     await onStartCombat(selectedMission);
@@ -123,7 +138,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div>
           <h1>Welcome, {character.name}</h1>
           <p>
-            Level {character.level} {character.class} ? Power {character.powerRating}
+            Level {character.level} {character.class} | Power {character.powerRating}
           </p>
         </div>
         <div className="resource-summary">
@@ -158,24 +173,30 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <header>
           <h3>Select Mission</h3>
         </header>
-        <div className="mission-grid">
-          {missions.map((mission) => (
-            <MissionCard
-              key={mission.id}
-              mission={mission}
-              selected={selectedMission === mission.id}
-              onSelect={setSelectedMission}
-            />
-          ))}
-        </div>
-        <div className="mission-actions">
-          <button onClick={handleStartCombat} disabled={!selectedMission || refreshing}>
-            {refreshing ? 'Simulating?' : 'Run Combat Simulation'}
-          </button>
-          <button className="secondary" onClick={handleStartIdle} disabled={!selectedMission || refreshing}>
-            {refreshing ? 'Dispatching?' : 'Dispatch for Idle Rewards'}
-          </button>
-        </div>
+        {missions.length === 0 ? (
+          <p className="empty-state">No missions available yet. Check back soon.</p>
+        ) : (
+          <>
+            <div className="mission-grid">
+              {missions.map((mission) => (
+                <MissionCard
+                  key={mission.id}
+                  mission={mission}
+                  selected={selectedMission === mission.id}
+                  onSelect={setSelectedMission}
+                />
+              ))}
+            </div>
+            <div className="mission-actions">
+              <button onClick={handleStartCombat} disabled={!selectedMission || refreshing}>
+                {refreshing ? 'Simulating...' : 'Run Combat Simulation'}
+              </button>
+              <button className="secondary" onClick={handleStartIdle} disabled={!selectedMission || refreshing}>
+                {refreshing ? 'Dispatching...' : 'Dispatch for Idle Rewards'}
+              </button>
+            </div>
+          </>
+        )}
         {statusMessage && <div className="status-banner success">{statusMessage}</div>}
         {errorMessage && <div className="status-banner error">{errorMessage}</div>}
       </section>
@@ -187,35 +208,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {encounters.length === 0 ? (
           <p className="empty-state">No encounters yet. Run a combat simulation to populate the log.</p>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Mission</th>
-                <th>Result</th>
-                <th>Rounds</th>
-                <th>Rewards</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {encounters.map((encounter) => (
-                <tr key={encounter.id}>
-                  <td>{encounter.mission?.name ?? 'Custom Mission'}</td>
-                  <td>
-                    <span className={`result ${encounter.result.toLowerCase()}`}>{encounter.result}</span>
-                  </td>
-                  <td>{encounter.rounds}</td>
-                  <td>
-                    <div className="reward-line">
-                      <span>{encounter.summary.rewards.experience} XP</span>
-                      <span>{encounter.summary.rewards.gold} Gold</span>
-                    </div>
-                  </td>
-                  <td>{formatDate(encounter.createdAt)}</td>
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mission</th>
+                  <th>Result</th>
+                  <th>Rounds</th>
+                  <th>Rewards</th>
+                  <th>Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {encounters.map((encounter) => (
+                  <tr key={encounter.id}>
+                    <td>{encounter.mission?.name ?? 'Custom Mission'}</td>
+                    <td>
+                      <span className={`result ${encounter.result.toLowerCase()}`}>{encounter.result}</span>
+                    </td>
+                    <td>{encounter.rounds}</td>
+                    <td>
+                      <div className="reward-line">
+                        <span>{encounter.summary.rewards.experience} XP</span>
+                        <span>{encounter.summary.rewards.gold} Gold</span>
+                      </div>
+                    </td>
+                    <td>{formatDate(encounter.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 
@@ -234,7 +257,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
             ) : (
               <button onClick={onClaimIdle} disabled={refreshing}>
-                {refreshing ? 'Claiming?' : 'Claim Rewards'}
+                {refreshing ? 'Claiming...' : 'Claim Rewards'}
               </button>
             )}
           </div>

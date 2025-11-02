@@ -51,9 +51,11 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onLogin, onRegister, loadi
         <label>
           Username
           <input
+            type="text"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             disabled={loading}
+            autoComplete="username"
             required
           />
         </label>
@@ -65,6 +67,7 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onLogin, onRegister, loadi
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               disabled={loading}
+              autoComplete="email"
             />
           </label>
         )}
@@ -75,11 +78,12 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onLogin, onRegister, loadi
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={loading}
+            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             required
           />
         </label>
         <button type="submit" disabled={loading}>
-          {loading ? 'Please wait?' : mode === 'login' ? 'Login' : 'Register'}
+          {loading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Register'}
         </button>
       </form>
 
