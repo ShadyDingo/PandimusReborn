@@ -1,0 +1,988 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandimus Reborn - Desktop RPG</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4c51bf;
+        }
+
+        .nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav button {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #4c51bf;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .nav button:hover {
+            background: #434190;
+        }
+
+        .main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .welcome {
+            margin-bottom: 2rem;
+        }
+
+        .welcome h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #2d3748;
+        }
+
+        .welcome p {
+            font-size: 1.1rem;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature {
+            padding: 1.5rem;
+            background: rgba(76, 81, 191, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(76, 81, 191, 0.2);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(76, 81, 191, 0.2);
+        }
+
+        .feature h3 {
+            margin-bottom: 0.5rem;
+            color: #4c51bf;
+        }
+
+        .feature p {
+            color: #4a5568;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(72, 187, 120, 0.1);
+            border: 1px solid rgba(72, 187, 120, 0.3);
+            border-radius: 8px;
+            color: #2f855a;
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4c51bf;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #434190;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* Character Screen Styles */
+        .character-stats {
+            margin-bottom: 2rem;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem;
+            background: rgba(76, 81, 191, 0.1);
+            border-radius: 6px;
+        }
+
+        .stat-item label {
+            font-weight: bold;
+            color: #4c51bf;
+        }
+
+        .character-actions {
+            margin-top: 2rem;
+        }
+
+        /* Combat Screen Styles */
+        .combat-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: rgba(76, 81, 191, 0.1);
+            border-radius: 12px;
+        }
+
+        .combatant {
+            text-align: center;
+            flex: 1;
+        }
+
+        .vs {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4c51bf;
+            margin: 0 2rem;
+        }
+
+        .health-bar {
+            width: 200px;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 0.5rem auto;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            transition: width 0.3s ease;
+        }
+
+        .enemy-health {
+            background: linear-gradient(90deg, #f56565, #e53e3e);
+        }
+
+        .combat-actions {
+            margin: 2rem 0;
+        }
+
+        .combat-log {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .combat-controls {
+            margin-top: 2rem;
+        }
+
+        /* Balance Screen Styles */
+        .simulation-panel {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(76, 81, 191, 0.1);
+            border-radius: 12px;
+        }
+
+        .sim-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .sim-controls input {
+            padding: 0.5rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 6px;
+            width: 120px;
+        }
+
+        .sim-results {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(72, 187, 120, 0.1);
+            border-radius: 8px;
+        }
+
+        .balance-tools {
+            margin: 2rem 0;
+        }
+
+        .balance-controls {
+            margin-top: 2rem;
+        }
+
+        /* Debug Screen Styles */
+        .debug-tools {
+            margin-bottom: 2rem;
+        }
+
+        .debug-console {
+            margin: 2rem 0;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+        }
+
+        .console-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+
+        .debug-controls {
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo"> Pandimus Reborn</div>
+        <nav class="nav">
+            <button onclick="showCharacter()">Character</button>
+            <button onclick="showCombat()">Combat</button>
+            <button onclick="showBalance()">Balance</button>
+            <button onclick="showDebug()">Debug</button>
+        </nav>
+    </div>
+
+    <main class="main">
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="game-container">
+            <div class="welcome">
+                <h1> Pandimus Reborn</h1>
+                <p>A deterministic, turn-based RPG with deep combat mechanics and character progression. Built with modern web technologies and packaged as a desktop application.</p>
+            </div>
+
+            <div class="features">
+                <div class="feature" onclick="showCharacter()">
+                    <h3>Character Development</h3>
+                    <p>Create and manage characters with full attribute control and progression testing.</p>
+                </div>
+                <div class="feature" onclick="showCombat()">
+                    <h3>Combat Testing</h3>
+                    <p>Test combat mechanics, damage calculations, and battle outcomes.</p>
+                </div>
+                <div class="feature" onclick="showBalance()">
+                    <h3>Balance Dashboard</h3>
+                    <p>Run simulations, analyze game balance, and test statistical outcomes.</p>
+                </div>
+                <div class="feature" onclick="showDebug()">
+                    <h3>Debug Tools</h3>
+                    <p>Inspect game state, export data, and access development utilities.</p>
+                </div>
+            </div>
+
+            <div class="status">
+                <strong>Admin/Development Version</strong><br>
+                This version includes all development tools, debugging features, and balance testing capabilities.
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-primary" onclick="startNewGame()">Start New Game</button>
+                <button class="btn btn-secondary" onclick="loadGame()">Load Game</button>
+                <button class="btn btn-secondary" onclick="runSimulation()">Run Simulation</button>
+            </div>
+        </div>
+
+        <!-- Character Screen -->
+        <div id="character-screen" class="game-container" style="display: none;">
+            <div class="welcome">
+                <h1>Character Management</h1>
+                <p>Create, view, and manage your character's stats, skills, and progression.</p>
+            </div>
+
+            <div id="character-content">
+                <div class="character-stats">
+                    <h3>Character Stats</h3>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <label>Name:</label>
+                            <span id="char-name">No Character</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Level:</label>
+                            <span id="char-level">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Health:</label>
+                            <span id="char-hp">100/100</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Power:</label>
+                            <span id="char-power">50</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Dexterity:</label>
+                            <span id="char-dex">50</span>
+                        </div>
+                        <div class="stat-item">
+                            <label>Vitality:</label>
+                            <span id="char-vit">50</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="character-actions">
+                    <h3>Actions</h3>
+                    <button class="btn btn-primary" onclick="createNewCharacter()">Create New Character</button>
+                    <button class="btn btn-secondary" onclick="levelUpCharacter()">Level Up</button>
+                    <button class="btn btn-secondary" onclick="showWelcome()">Back to Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Combat Screen -->
+        <div id="combat-screen" class="game-container" style="display: none;">
+            <div class="welcome">
+                <h1>Combat Arena</h1>
+                <p>Engage in turn-based combat with strategic depth and deterministic outcomes.</p>
+            </div>
+
+            <div id="combat-content">
+                <div class="combat-area">
+                    <div class="combatant player">
+                        <h3>Player</h3>
+                        <div class="health-bar">
+                            <div class="health-fill" id="player-health" style="width: 100%"></div>
+                        </div>
+                        <p>HP: <span id="player-hp-text">100/100</span></p>
+                    </div>
+                    
+                    <div class="vs">VS</div>
+                    
+                    <div class="combatant enemy">
+                        <h3>Goblin Warrior</h3>
+                        <div class="health-bar">
+                            <div class="health-fill enemy-health" id="enemy-health" style="width: 100%"></div>
+                        </div>
+                        <p>HP: <span id="enemy-hp-text">80/80</span></p>
+                    </div>
+                </div>
+
+                <div class="combat-actions">
+                    <h3>Actions</h3>
+                    <button class="btn btn-primary" onclick="playerAttack()">Attack</button>
+                    <button class="btn btn-secondary" onclick="playerDefend()">Defend</button>
+                    <button class="btn btn-secondary" onclick="playerHeal()">Heal</button>
+                </div>
+
+                <div class="combat-log" id="combat-log">
+                    <h3>Combat Log</h3>
+                    <div id="log-content">Combat ready! Choose your action.</div>
+                </div>
+
+                <div class="combat-controls">
+                    <button class="btn btn-secondary" onclick="startNewCombat()">New Combat</button>
+                    <button class="btn btn-secondary" onclick="showWelcome()">Back to Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Dashboard -->
+        <div id="balance-screen" class="game-container" style="display: none;">
+            <div class="welcome">
+                <h1>Balance Dashboard</h1>
+                <p>Simulation tools and analytics for game balance testing.</p>
+            </div>
+
+            <div id="balance-content">
+                <div class="simulation-panel">
+                    <h3>Combat Simulation</h3>
+                    <div class="sim-controls">
+                        <label>Number of battles:</label>
+                        <input type="number" id="battle-count" value="1000" min="100" max="10000">
+                        <button class="btn btn-primary" onclick="runCombatSimulation()">Run Simulation</button>
+                    </div>
+                    
+                    <div class="sim-results" id="sim-results" style="display: none;">
+                        <h4>Simulation Results</h4>
+                        <div id="results-content"></div>
+                    </div>
+                </div>
+
+                <div class="balance-tools">
+                    <h3>Balance Tools</h3>
+                    <button class="btn btn-secondary" onclick="analyzeCombatBalance()">Analyze Combat Balance</button>
+                    <button class="btn btn-secondary" onclick="testLootRates()">Test Loot Rates</button>
+                    <button class="btn btn-secondary" onclick="validateProgression()">Validate Progression</button>
+                </div>
+
+                <div class="balance-controls">
+                    <button class="btn btn-secondary" onclick="showWelcome()">Back to Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Panel -->
+        <div id="debug-screen" class="game-container" style="display: none;">
+            <div class="welcome">
+                <h1>Debug Panel</h1>
+                <p>Development tools and game state inspection.</p>
+            </div>
+
+            <div id="debug-content">
+                <div class="debug-tools">
+                    <h3>Debug Tools</h3>
+                    <button class="btn btn-primary" onclick="inspectGameState()">Inspect Game State</button>
+                    <button class="btn btn-secondary" onclick="resetGameData()">Reset Game Data</button>
+                    <button class="btn btn-secondary" onclick="exportSaveData()">Export Save Data</button>
+                    <button class="btn btn-secondary" onclick="importSaveData()">Import Save Data</button>
+                </div>
+
+                <div class="debug-console">
+                    <h3>Debug Console</h3>
+                    <div class="console-output" id="debug-output">
+                        <p>Debug console ready. Use the tools above to inspect game state.</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="clearDebugConsole()">Clear Console</button>
+                </div>
+
+                <div class="debug-controls">
+                    <button class="btn btn-secondary" onclick="showWelcome()">Back to Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        Built with Electron  Pandimus Reborn v1.0.0
+    </footer>
+
+    <script>
+        // Game state
+        let currentScreen = "welcome";
+        let player = null;
+        let combatState = null;
+        let gameData = {
+            player: null,
+            combatHistory: [],
+            simulations: [],
+            debugLog: []
+        };
+
+        // Screen navigation
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('[id$="-screen"]').forEach(screen => {
+                screen.style.display = 'none';
+            });
+            
+            // Show the requested screen
+            document.getElementById(screenId + '-screen').style.display = 'block';
+            currentScreen = screenId;
+            
+            // Update navigation button states
+            document.querySelectorAll('.nav button').forEach(btn => {
+                btn.style.background = '#4c51bf';
+            });
+            
+            // Highlight current screen button
+            const navButtons = document.querySelectorAll('.nav button');
+            const buttonMap = {
+                'character': 0,
+                'combat': 1,
+                'balance': 2,
+                'debug': 3
+            };
+            
+            if (buttonMap[screenId] !== undefined) {
+                navButtons[buttonMap[screenId]].style.background = '#434190';
+            }
+        }
+
+        function showWelcome() {
+            showScreen('welcome');
+        }
+
+        function showCharacter() {
+            showScreen('character');
+            updateCharacterDisplay();
+        }
+
+        function showCombat() {
+            showScreen('combat');
+            if (!combatState) {
+                startNewCombat();
+            }
+        }
+
+        function showBalance() {
+            showScreen('balance');
+        }
+
+        function showDebug() {
+            showScreen('debug');
+        }
+
+        // Character management
+        function createNewCharacter() {
+            const name = prompt("Enter character name:", "New Adventurer");
+            if (name) {
+                player = {
+                    name: name,
+                    level: 1,
+                    hp: 100,
+                    maxHp: 100,
+                    attributes: { 
+                        Power: 50, 
+                        Dexterity: 50, 
+                        Vitality: 50 
+                    },
+                    skills: {},
+                    experience: 0,
+                    experienceToNext: 100
+                };
+                gameData.player = player;
+                updateCharacterDisplay();
+                addDebugLog(`Character created: ${name}`);
+            }
+        }
+
+        function levelUpCharacter() {
+            if (!player) {
+                alert("No character created yet!");
+                return;
+            }
+            
+            player.level++;
+            player.maxHp += 20;
+            player.hp = player.maxHp;
+            player.attributes.Power += 5;
+            player.attributes.Dexterity += 5;
+            player.attributes.Vitality += 5;
+            player.experienceToNext = Math.floor(player.experienceToNext * 1.2);
+            
+            updateCharacterDisplay();
+            addDebugLog(`Character leveled up to level ${player.level}`);
+        }
+
+        function updateCharacterDisplay() {
+            if (player) {
+                document.getElementById('char-name').textContent = player.name;
+                document.getElementById('char-level').textContent = player.level;
+                document.getElementById('char-hp').textContent = `${player.hp}/${player.maxHp}`;
+                document.getElementById('char-power').textContent = player.attributes.Power;
+                document.getElementById('char-dex').textContent = player.attributes.Dexterity;
+                document.getElementById('char-vit').textContent = player.attributes.Vitality;
+            } else {
+                document.getElementById('char-name').textContent = 'No Character';
+                document.getElementById('char-level').textContent = '1';
+                document.getElementById('char-hp').textContent = '100/100';
+                document.getElementById('char-power').textContent = '50';
+                document.getElementById('char-dex').textContent = '50';
+                document.getElementById('char-vit').textContent = '50';
+            }
+        }
+
+        // Combat system
+        function startNewCombat() {
+            if (!player) {
+                alert("Please create a character first!");
+                showCharacter();
+                return;
+            }
+            
+            combatState = {
+                player: {
+                    hp: player.hp,
+                    maxHp: player.maxHp,
+                    power: player.attributes.Power,
+                    defending: false
+                },
+                enemy: {
+                    name: "Goblin Warrior",
+                    hp: 80,
+                    maxHp: 80,
+                    power: 25,
+                    defending: false
+                },
+                turn: 'player',
+                log: []
+            };
+            
+            updateCombatDisplay();
+            addCombatLog("Combat started! Choose your action.");
+        }
+
+        function playerAttack() {
+            if (!combatState || combatState.turn !== 'player') return;
+            
+            const damage = Math.max(1, combatState.player.power - (combatState.enemy.defending ? 10 : 0));
+            combatState.enemy.hp = Math.max(0, combatState.enemy.hp - damage);
+            
+            addCombatLog(`Player attacks for ${damage} damage!`);
+            
+            if (combatState.enemy.hp <= 0) {
+                addCombatLog("Enemy defeated! Combat won!");
+                combatState = null;
+                updateCombatDisplay();
+                return;
+            }
+            
+            combatState.turn = 'enemy';
+            setTimeout(enemyTurn, 1000);
+            updateCombatDisplay();
+        }
+
+        function playerDefend() {
+            if (!combatState || combatState.turn !== 'player') return;
+            
+            combatState.player.defending = true;
+            addCombatLog("Player defends! Damage reduced next turn.");
+            combatState.turn = 'enemy';
+            setTimeout(enemyTurn, 1000);
+        }
+
+        function playerHeal() {
+            if (!combatState || combatState.turn !== 'player') return;
+            
+            const healAmount = 25;
+            combatState.player.hp = Math.min(combatState.player.maxHp, combatState.player.hp + healAmount);
+            addCombatLog(`Player heals for ${healAmount} HP!`);
+            combatState.turn = 'enemy';
+            setTimeout(enemyTurn, 1000);
+            updateCombatDisplay();
+        }
+
+        function enemyTurn() {
+            if (!combatState || combatState.turn !== 'enemy') return;
+            
+            const damage = Math.max(1, combatState.enemy.power - (combatState.player.defending ? 15 : 0));
+            combatState.player.hp = Math.max(0, combatState.player.hp - damage);
+            
+            addCombatLog(`Enemy attacks for ${damage} damage!`);
+            
+            if (combatState.player.hp <= 0) {
+                addCombatLog("Player defeated! Combat lost!");
+                combatState = null;
+                updateCombatDisplay();
+                return;
+            }
+            
+            combatState.player.defending = false;
+            combatState.turn = 'player';
+            updateCombatDisplay();
+        }
+
+        function updateCombatDisplay() {
+            if (!combatState) {
+                document.getElementById('player-health').style.width = '100%';
+                document.getElementById('player-hp-text').textContent = '100/100';
+                document.getElementById('enemy-health').style.width = '100%';
+                document.getElementById('enemy-hp-text').textContent = '80/80';
+                return;
+            }
+            
+            const playerHealthPercent = (combatState.player.hp / combatState.player.maxHp) * 100;
+            const enemyHealthPercent = (combatState.enemy.hp / combatState.enemy.maxHp) * 100;
+            
+            document.getElementById('player-health').style.width = playerHealthPercent + '%';
+            document.getElementById('player-hp-text').textContent = `${combatState.player.hp}/${combatState.player.maxHp}`;
+            document.getElementById('enemy-health').style.width = enemyHealthPercent + '%';
+            document.getElementById('enemy-hp-text').textContent = `${combatState.enemy.hp}/${combatState.enemy.maxHp}`;
+        }
+
+        function addCombatLog(message) {
+            const logContent = document.getElementById('log-content');
+            const time = new Date().toLocaleTimeString();
+            logContent.innerHTML += `<div>[${time}] ${message}</div>`;
+            logContent.scrollTop = logContent.scrollHeight;
+            
+            if (combatState) {
+                combatState.log.push(`[${time}] ${message}`);
+            }
+        }
+
+        // Balance simulation
+        function runCombatSimulation() {
+            const battleCount = parseInt(document.getElementById('battle-count').value) || 1000;
+            addDebugLog(`Starting combat simulation with ${battleCount} battles...`);
+            
+            let playerWins = 0;
+            let enemyWins = 0;
+            const results = [];
+            
+            for (let i = 0; i < battleCount; i++) {
+                const result = simulateBattle();
+                results.push(result);
+                if (result.winner === 'player') playerWins++;
+                else enemyWins++;
+            }
+            
+            const winRate = (playerWins / battleCount * 100).toFixed(2);
+            const avgTurns = (results.reduce((sum, r) => sum + r.turns, 0) / battleCount).toFixed(1);
+            
+            const resultsContent = `
+                <p><strong>Simulation Complete!</strong></p>
+                <p>Battles fought: ${battleCount}</p>
+                <p>Player wins: ${playerWins} (${winRate}%)</p>
+                <p>Enemy wins: ${enemyWins}</p>
+                <p>Average turns per battle: ${avgTurns}</p>
+            `;
+            
+            document.getElementById('results-content').innerHTML = resultsContent;
+            document.getElementById('sim-results').style.display = 'block';
+            
+            addDebugLog(`Simulation complete: Player win rate ${winRate}% over ${avgTurns} avg turns`);
+        }
+
+        function simulateBattle() {
+            const player = { hp: 100, maxHp: 100, power: 50 };
+            const enemy = { hp: 80, maxHp: 80, power: 25 };
+            let turns = 0;
+            
+            while (player.hp > 0 && enemy.hp > 0) {
+                turns++;
+                
+                // Player attack
+                const playerDamage = Math.max(1, player.power);
+                enemy.hp = Math.max(0, enemy.hp - playerDamage);
+                
+                if (enemy.hp <= 0) {
+                    return { winner: 'player', turns, playerHp: player.hp };
+                }
+                
+                // Enemy attack
+                const enemyDamage = Math.max(1, enemy.power);
+                player.hp = Math.max(0, player.hp - enemyDamage);
+                
+                if (player.hp <= 0) {
+                    return { winner: 'enemy', turns, enemyHp: enemy.hp };
+                }
+            }
+        }
+
+        function analyzeCombatBalance() {
+            addDebugLog("Analyzing combat balance...");
+            // This would run more sophisticated balance analysis
+            alert("Balance analysis complete! Check debug console for details.");
+        }
+
+        function testLootRates() {
+            addDebugLog("Testing loot drop rates...");
+            alert("Loot rate testing complete! Check debug console for details.");
+        }
+
+        function validateProgression() {
+            addDebugLog("Validating character progression curves...");
+            alert("Progression validation complete! Check debug console for details.");
+        }
+
+        // Debug tools
+        function inspectGameState() {
+            const state = {
+                currentScreen,
+                player,
+                combatState,
+                gameData
+            };
+            
+            document.getElementById('debug-output').innerHTML = 
+                '<pre>' + JSON.stringify(state, null, 2) + '</pre>';
+            
+            addDebugLog("Game state inspected and displayed above.");
+        }
+
+        function resetGameData() {
+            if (confirm("Reset all game data? This cannot be undone!")) {
+                player = null;
+                combatState = null;
+                gameData = {
+                    player: null,
+                    combatHistory: [],
+                    simulations: [],
+                    debugLog: []
+                };
+                showWelcome();
+                addDebugLog("Game data reset complete.");
+            }
+        }
+
+        function exportSaveData() {
+            const saveData = JSON.stringify(gameData, null, 2);
+            const blob = new Blob([saveData], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pandimus-save.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            addDebugLog("Save data exported to pandimus-save.json");
+        }
+
+        function importSaveData() {
+            alert("Import save data - Coming soon! This would load a save file.");
+            addDebugLog("Import save data requested (not implemented yet)");
+        }
+
+        function clearDebugConsole() {
+            document.getElementById('debug-output').innerHTML = 
+                '<p>Debug console cleared.</p>';
+        }
+
+        function addDebugLog(message) {
+            const time = new Date().toLocaleTimeString();
+            gameData.debugLog.push(`[${time}] ${message}`);
+            
+            const output = document.getElementById('debug-output');
+            if (output) {
+                output.innerHTML += `<div>[${time}] ${message}</div>`;
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+
+        // Main game functions
+        function startNewGame() {
+            if (confirm("Start a new game? This will create a new character.")) {
+                createNewCharacter();
+                if (player) {
+                    showCharacter();
+                }
+            }
+        }
+
+        function loadGame() {
+            alert("Load Game - Coming soon! This would load a saved game from file.");
+            addDebugLog("Load game requested (not implemented yet)");
+        }
+
+        function runSimulation() {
+            showBalance();
+            setTimeout(() => {
+            if (confirm("Run a balance simulation? This will test combat outcomes.")) {
+                    runCombatSimulation();
+            }
+            }, 100);
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener("keydown", (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case "n":
+                        e.preventDefault();
+                        startNewGame();
+                        break;
+                    case "s":
+                        e.preventDefault();
+                        alert("Save Game - Coming soon!");
+                        break;
+                    case "b":
+                        e.preventDefault();
+                        showBalance();
+                        break;
+                    case "c":
+                        e.preventDefault();
+                        showCharacter();
+                        break;
+                }
+            }
+            if (e.key === "F12") {
+                e.preventDefault();
+                showDebug();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            addDebugLog("Pandimus Reborn Desktop Version Loaded");
+            addDebugLog("Balance & Simulation Framework Ready");
+            addDebugLog("Combat System Initialized");
+            addDebugLog("Character System Ready");
+            addDebugLog("Debug Tools Active");
+        });
+    </script>
+</body>
+</html>

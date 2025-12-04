@@ -1,0 +1,20 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env
+.env.local
+.DS_Store
+dist
+build
+coverage
+.nyc_output
+*.log
+.vscode
+.idea
+Old content
+apps/desktop/node_modules
+apps/web
+apps/desktop/dist
+apps/desktop/assets
+
