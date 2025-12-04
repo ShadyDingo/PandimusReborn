@@ -1,0 +1,116 @@
+module.exports = {
+  warrior: {
+    key: "warrior",
+    name: "Warrior",
+    description: "A strong melee fighter with high health and defense.",
+    baseStats: {
+      health: 120,
+      attack: 16,
+      defense: 12,
+      speed: 8,
+      magic: 4,
+    },
+    defaultAbilities: [
+      { slug: "slash", priority: 0 },
+      { slug: "shield_bash", priority: 1 },
+      { slug: "fortify", priority: 2 },
+      { slug: "reckless_charge", priority: 3 },
+    ],
+    defaultEquipment: [
+      { slot: "WEAPON", itemSlug: "iron-sword" },
+      { slot: "CHEST", itemSlug: "leather-armor" },
+    ],
+    growth: {
+      health: 12,
+      attack: 3,
+      defense: 2,
+      speed: 1,
+      magic: 0,
+    },
+  },
+  mage: {
+    key: "mage",
+    name: "Mage",
+    description: "A powerful spellcaster with high magic damage.",
+    baseStats: {
+      health: 80,
+      attack: 6,
+      defense: 6,
+      speed: 11,
+      magic: 18,
+    },
+    defaultAbilities: [
+      { slug: "firebolt", priority: 0 },
+      { slug: "hailstorm", priority: 1 },
+      { slug: "chain_lightning", priority: 2 },
+      { slug: "frost_barrier", priority: 3 },
+    ],
+    defaultEquipment: [
+      { slot: "WEAPON", itemSlug: "arcane-ring" },
+    ],
+    growth: {
+      health: 8,
+      attack: 1,
+      defense: 1,
+      speed: 1,
+      magic: 4,
+    },
+  },
+  rogue: {
+    key: "rogue",
+    name: "Rogue",
+    description: "A quick fighter relying on precision and momentum.",
+    baseStats: {
+      health: 90,
+      attack: 14,
+      defense: 8,
+      speed: 16,
+      magic: 6,
+    },
+    defaultAbilities: [
+      { slug: "twin_fangs", priority: 0 },
+      { slug: "bleeding_edge", priority: 1 },
+      { slug: "shadow_step", priority: 2 },
+      { slug: "snipe", priority: 3 },
+    ],
+    defaultEquipment: [
+      { slot: "WEAPON", itemSlug: "iron-sword" },
+    ],
+    growth: {
+      health: 9,
+      attack: 3,
+      defense: 1,
+      speed: 3,
+      magic: 1,
+    },
+  },
+  cleric: {
+    key: "cleric",
+    name: "Cleric",
+    description: "A holy warrior with healing and support abilities.",
+    baseStats: {
+      health: 100,
+      attack: 10,
+      defense: 10,
+      speed: 9,
+      magic: 15,
+    },
+    defaultAbilities: [
+      { slug: "heal", priority: 0 },
+      { slug: "purify", priority: 1 },
+      { slug: "smite", priority: 2 },
+      { slug: "sanctuary", priority: 3 },
+    ],
+    defaultEquipment: [
+      { slot: "WEAPON", itemSlug: "iron-sword" },
+      { slot: "ACCESSORY_1", itemSlug: "arcane-ring" },
+    ],
+    growth: {
+      health: 10,
+      attack: 2,
+      defense: 2,
+      speed: 1,
+      magic: 3,
+    },
+  },
+};
