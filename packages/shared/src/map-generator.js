@@ -128,8 +128,119 @@ export class MapGenerator {
         return { towns, biomeMap, mapData };
     }
 
+    // Simplified image-based map generation (for use with world_map.png)
+    async generateImageBasedMapAsync(mapSystem, startingTownX = 500, startingTownY = 500, progressCallback = null) {
+        if (progressCallback) progressCallback('Initializing map grid...');
+        
+        const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+        await yieldToBrowser();
+        
+        // Create a simple grid system - assign default biomes
+        // For now, we'll use a simple pattern or let the image show through
+        // Biomes will be assigned based on simple distance/position logic
+        const towns = [];
+        
+        // Place starting town
+        const startingTown = {
+            id: 'starting_town',
+            name: 'Starting Town',
+            x: startingTownX,
+            y: startingTownY,
+            description: 'Your journey begins here.',
+            shops: ['martial', 'magical', 'jewelry']
+        };
+        towns.push(startingTown);
+        
+        if (progressCallback) progressCallback('Creating map grid (0%)...');
+        
+        // Generate squares in chunks - simplified version
+        let processed = 0;
+        const total = 1000 * 1000;
+        const CHUNK_SIZE = 10000; // Process 10,000 squares per chunk for faster generation
+        
+        for (let x = 0; x < 1000; x++) {
+            for (let y = 0; y < 1000; y++) {
+                // Simple biome assignment based on distance from center
+                const distanceFromCenter = Math.sqrt(Math.pow(x - 500, 2) + Math.pow(y - 500, 2));
+                const normalizedDistance = distanceFromCenter / 707; // Max distance
+                
+                // Assign biome based on simple logic (can be refined later)
+                let biome = 'plains'; // Default
+                if (normalizedDistance > 0.9) {
+                    biome = 'coast';
+                } else if (normalizedDistance > 0.7) {
+                    biome = Math.random() < 0.3 ? 'forest' : 'plains';
+                } else if (normalizedDistance > 0.5) {
+                    biome = Math.random() < 0.4 ? 'forest' : 'plains';
+                } else {
+                    biome = Math.random() < 0.5 ? 'plains' : 'forest';
+                }
+                
+                const levelRequirement = mapSystem.calculateZoneDifficulty(x, y, startingTownX, startingTownY);
+                const town = towns.find(t => t.x === x && t.y === y);
+                
+                const squareData = {
+                    biome,
+                    zone: this.getZoneName(biome, levelRequirement),
+                    levelRequirement,
+                    isTown: !!town,
+                    townId: town ? town.id : null,
+                    isFerryPoint: false, // Disabled for now
+                    elevation: 50, // Default elevation
+                    hasRiver: false,
+                    hasLake: false,
+                    entities: {
+                        enemies: [],
+                        npcs: [],
+                        players: [],
+                        items: []
+                    },
+                    lastEnemyRespawn: Date.now(),
+                    lastResourceRespawn: Date.now()
+                };
+                
+                // Spawn enemies and resources (skip towns)
+                if (!town && biome !== 'ocean') {
+                    this.spawnEnemies(mapSystem, x, y, squareData, startingTownX, startingTownY, towns);
+                    this.spawnResources(mapSystem, x, y, squareData, startingTownX, startingTownY, towns);
+                }
+                
+                mapSystem.setSquare(x, y, squareData);
+                processed++;
+                
+                // Yield periodically
+                if (processed % CHUNK_SIZE === 0) {
+                    const percent = Math.round((processed / total) * 100);
+                    if (progressCallback) progressCallback(`Creating map grid (${percent}%)...`);
+                    await yieldToBrowser();
+                }
+            }
+        }
+        
+        console.log(`Image-based map generated with ${towns.length} towns`);
+        
+        const mapData = {
+            version: MAP_VERSION,
+            seed: this.seed,
+            generatedAt: new Date().toISOString(),
+            towns: towns,
+            rivers: [],
+            lakes: [],
+            oceans: [],
+            ferryPoints: [], // Disabled for now
+            isImageBased: true
+        };
+        
+        if (progressCallback) progressCallback('Map generation complete!');
+        return { towns, biomeMap: null, mapData };
+    }
+
     // Async version that yields to browser to prevent UI freezing
     async generateMapAsync(mapSystem, startingTownX = 500, startingTownY = 500, progressCallback = null) {
+        // Use image-based generation instead of procedural
+        return await this.generateImageBasedMapAsync(mapSystem, startingTownX, startingTownY, progressCallback);
+        
+        /* Original procedural generation - disabled for image-based map
         if (progressCallback) progressCallback('Starting map generation...');
         
         // Generate in chunks with yields to prevent blocking
@@ -978,8 +1089,8 @@ export class MapGenerator {
             } while (
                 attempts < 200 && 
                 (!continentMap[townX] || !continentMap[townX][townY] ||
-                 towns.some(t => 
-                     Math.sqrt(Math.pow(townX - t.x, 2) + Math.pow(townY - t.y, 2)) < minDistance
+                towns.some(t => 
+                    Math.sqrt(Math.pow(townX - t.x, 2) + Math.pow(townY - t.y, 2)) < minDistance
                  ))
             );
             
