@@ -1500,6 +1500,31 @@
             display: block;
         }
 
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .modal-content {
+            background: linear-gradient(180deg, #d4c5a9 0%, #c4b599 100%);
+            border: 2px solid #8b7355;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
         /* Combat Screen Styles */
         .combat-area {
             display: flex;
@@ -2495,6 +2520,31 @@
                     <div id="normal-combat-controls">
                         <button class="btn btn-secondary" onclick="showMap()">Back to Map</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resource Gathering Modal -->
+        <div id="resource-gathering-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-content" style="max-width: 500px; background: linear-gradient(180deg, #d4c5a9 0%, #c4b599 100%); border: 2px solid #8b7355; border-radius: 8px; padding: 2rem;">
+                <h2 style="color: #8b4513; margin-top: 0;">Gather Resources</h2>
+                <div id="resource-gathering-info" style="margin-bottom: 1.5rem;">
+                    <p style="color: #1a1a1a;"><strong id="resource-gathering-name">Resource</strong></p>
+                    <p style="color: #1a1a1a;">Available: <span id="resource-gathering-max">1</span></p>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label for="resource-quantity-input" style="display: block; margin-bottom: 0.5rem; color: #1a1a1a; font-weight: bold;">Quantity:</label>
+                    <input type="number" id="resource-quantity-input" min="1" value="1" style="width: 100%; padding: 0.5rem; font-size: 1rem; border: 2px solid #8b7355; border-radius: 4px; background: #f5f5dc;">
+                    <div style="margin-top: 0.5rem; display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary" onclick="setResourceQuantity(1)" style="flex: 1;">1</button>
+                        <button class="btn btn-secondary" onclick="setResourceQuantity(5)" style="flex: 1;">5</button>
+                        <button class="btn btn-secondary" onclick="setResourceQuantity(10)" style="flex: 1;">10</button>
+                        <button class="btn btn-secondary" onclick="setResourceQuantityMax()" style="flex: 1;">Max</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="closeResourceGatheringModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="confirmGatherResource()">Gather</button>
                 </div>
             </div>
         </div>
@@ -3902,7 +3952,7 @@
             const enemy = entities.enemies.find(e => e.id === enemyId);
             
             if (!enemy) {
-                alert('Enemy not found!');
+                showTemporaryMessage('Enemy not found!', 'error');
                 return;
             }
             
@@ -3916,7 +3966,8 @@ Gold Reward: ${enemy.gold[0]}-${enemy.gold[1]}
 Experience: ${enemy.exp}
             `.trim();
             
-            alert(stats);
+            // Show in a modal-style message
+            showTemporaryMessage(stats.replace(/\n/g, ' | '), 'info');
         }
 
         function fightEnemy(enemyId) {
@@ -3975,6 +4026,9 @@ Experience: ${enemy.exp}
             // Show combat screen
             showScreen('combat');
             
+            // Initialize combat log for this combat instance
+            initializeCombatLog();
+            
             // Update combat display
             updateCombatDisplay();
             addCombatLog(`Combat started! You encounter ${enemy.name}!`);
@@ -3982,35 +4036,140 @@ Experience: ${enemy.exp}
             // Start automatic combat after a short delay
             setTimeout(() => {
                 if (combatState && combatState.turn === 'player') {
-                    playerAttack();
+                    automaticPlayerTurn();
                 }
             }, 1000);
         }
+
+        // Resource gathering modal state
+        let currentGatheringResource = null;
+        let currentGatheringMax = 1;
 
         function gatherResource(resourceId, maxQuantity) {
             const engine = initializeGameEngine();
             if (!engine) return;
             
-            const quantity = prompt(`How many would you like to gather? (1-${maxQuantity})`, '1');
-            if (!quantity) return;
+            // Get resource name for display
+            const entities = engine.getCurrentEntities();
+            const resource = entities.items.find(item => 
+                (item.id === resourceId || item.resourceId === resourceId) &&
+                item.type && ['ore', 'wood', 'plant', 'crystal', 'stone'].includes(item.type)
+            );
             
-            const qty = parseInt(quantity);
-            if (isNaN(qty) || qty < 1 || qty > maxQuantity) {
-                alert(`Invalid quantity! Please enter a number between 1 and ${maxQuantity}.`);
+            const resourceName = resource ? resource.name : 'Resource';
+            
+            // Store current gathering state
+            currentGatheringResource = resourceId;
+            currentGatheringMax = maxQuantity;
+            
+            // Show modal
+            document.getElementById('resource-gathering-name').textContent = resourceName;
+            document.getElementById('resource-gathering-max').textContent = maxQuantity;
+            const quantityInput = document.getElementById('resource-quantity-input');
+            quantityInput.value = '1';
+            quantityInput.max = maxQuantity;
+            quantityInput.min = 1;
+            
+            document.getElementById('resource-gathering-modal').style.display = 'flex';
+            quantityInput.focus();
+            quantityInput.select();
+        }
+
+        function closeResourceGatheringModal() {
+            document.getElementById('resource-gathering-modal').style.display = 'none';
+            currentGatheringResource = null;
+            currentGatheringMax = 1;
+        }
+
+        function setResourceQuantity(quantity) {
+            const input = document.getElementById('resource-quantity-input');
+            const max = parseInt(input.max);
+            const newValue = Math.min(quantity, max);
+            input.value = newValue;
+        }
+
+        function setResourceQuantityMax() {
+            const input = document.getElementById('resource-quantity-input');
+            input.value = input.max;
+        }
+
+        function confirmGatherResource() {
+            if (!currentGatheringResource) {
+                closeResourceGatheringModal();
+                return;
+            }
+            
+            const engine = initializeGameEngine();
+            if (!engine) return;
+            
+            const quantityInput = document.getElementById('resource-quantity-input');
+            const qty = parseInt(quantityInput.value);
+            
+            if (isNaN(qty) || qty < 1 || qty > currentGatheringMax) {
+                alert(`Invalid quantity! Please enter a number between 1 and ${currentGatheringMax}.`);
                 return;
             }
             
             // Call gather method
-            const result = engine.gatherResource(engine.gameState.mapPosition.x, engine.gameState.mapPosition.y, resourceId, qty);
+            const result = engine.gatherResource(engine.gameState.mapPosition.x, engine.gameState.mapPosition.y, currentGatheringResource, qty);
+            
+            closeResourceGatheringModal();
             
             if (result.success) {
-                alert(`Gathered ${qty} ${result.resourceName}!`);
+                // Show success message in a non-blocking way
+                const message = `Gathered ${qty} ${result.resourceName}!`;
+                showTemporaryMessage(message);
                 updateBiomeSquarePanel();
                 saveGameState();
             } else {
-                alert(result.message || 'Failed to gather resource!');
+                showTemporaryMessage(result.message || 'Failed to gather resource!', 'error');
             }
         }
+
+        function showTemporaryMessage(message, type = 'success') {
+            // Create or update temporary message element
+            let msgEl = document.getElementById('temp-message');
+            if (!msgEl) {
+                msgEl = document.createElement('div');
+                msgEl.id = 'temp-message';
+                msgEl.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem; border-radius: 8px; z-index: 10001; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: opacity 0.3s; max-width: 400px; word-wrap: break-word;';
+                document.body.appendChild(msgEl);
+            }
+            
+            msgEl.textContent = message;
+            
+            // Set color based on type
+            if (type === 'error') {
+                msgEl.style.background = '#e53e3e';
+            } else if (type === 'info') {
+                msgEl.style.background = '#3182ce';
+            } else {
+                msgEl.style.background = '#38a169';
+            }
+            
+            msgEl.style.color = '#ffffff';
+            msgEl.style.opacity = '1';
+            msgEl.style.display = 'block';
+            
+            // Hide after appropriate time (longer for info messages)
+            const hideDelay = type === 'info' ? 5000 : 3000;
+            setTimeout(() => {
+                msgEl.style.opacity = '0';
+                setTimeout(() => {
+                    msgEl.style.display = 'none';
+                }, 300);
+            }, hideDelay);
+        }
+
+        // Close modal on escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('resource-gathering-modal');
+                if (modal && modal.style.display === 'flex') {
+                    closeResourceGatheringModal();
+                }
+            }
+        });
 
         function handleMapCombatVictory() {
             const engine = initializeGameEngine();
@@ -6464,9 +6623,12 @@ Experience: ${enemy.exp}
             // Reset battle turn counter
             battleTurnCount = 0;
             
-            // Initialize combat log
+            // Initialize combat log for this combat instance
             combatState.log = [];
             combatState.location = currentLocation;
+            
+            // Clear and initialize the combat log display
+            initializeCombatLog();
             
             document.getElementById('player-name').textContent = player.name;
             document.getElementById('enemy-name').textContent = enemyName;
@@ -6481,11 +6643,25 @@ Experience: ${enemy.exp}
 
         // Automatic combat AI
         function automaticPlayerTurn() {
-            if (!combatState || combatState.turn !== 'player') return;
+            if (!combatState) {
+                console.warn('automaticPlayerTurn called but combatState is null');
+                return;
+            }
+            
+            if (combatState.turn !== 'player') {
+                console.warn(`automaticPlayerTurn called but turn is ${combatState.turn}, expected 'player'`);
+                return;
+            }
             
             // Increment turn counter
             combatState.turnCount++;
             battleTurnCount++;
+            
+            // Update turn counter display
+            const turnCounterEl = document.getElementById('turn-counter');
+            if (turnCounterEl) {
+                turnCounterEl.textContent = `Turn ${battleTurnCount}/${maxBattleTurns}`;
+            }
             
             // Check for stalemate conditions
             if (checkForStalemate()) {
@@ -6553,7 +6729,15 @@ Experience: ${enemy.exp}
         }
 
         function enemyTurn() {
-            if (!combatState || combatState.turn !== 'enemy') return;
+            if (!combatState) {
+                console.warn('enemyTurn called but combatState is null');
+                return;
+            }
+            
+            if (combatState.turn !== 'enemy') {
+                console.warn(`enemyTurn called but turn is ${combatState.turn}, expected 'enemy'`);
+                return;
+            }
             
             const combatStats = calculateCombatStats();
             let damage = Math.max(1, combatState.enemy.power - (combatState.player.defending ? 15 : 0));
@@ -6947,8 +7131,28 @@ Experience: ${enemy.exp}
         function addCombatLog(message) {
             const logContent = document.getElementById('log-content');
             const time = new Date().toLocaleTimeString();
-            logContent.innerHTML += `<div>[${time}] ${message}</div>`;
-            logContent.scrollTop = logContent.scrollHeight;
+            
+            // If combatState exists, add to its log array for per-combat tracking
+            if (combatState && combatState.log) {
+                combatState.log.push({ time, message });
+            }
+            
+            // Update display
+            if (logContent) {
+                logContent.innerHTML += `<div>[${time}] ${message}</div>`;
+                logContent.scrollTop = logContent.scrollHeight;
+            }
+        }
+
+        // Initialize combat log for new combat instance
+        function initializeCombatLog() {
+            const logContent = document.getElementById('log-content');
+            if (logContent) {
+                logContent.innerHTML = '';
+            }
+            if (combatState) {
+                combatState.log = [];
+            }
         }
 
         function fleeCombat() {
