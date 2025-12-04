@@ -670,7 +670,7 @@ export class MapGenerator {
         
         // Second pass: add mountain pockets (volcanic, canyon)
         if (progressCallback) progressCallback('Adding mountain pockets...');
-        this.addMountainPockets(biomeMap, elevationMap);
+        await this.addMountainPocketsAsync(biomeMap, elevationMap, progressCallback);
         await yieldToBrowser();
         
         return biomeMap;
@@ -788,7 +788,7 @@ export class MapGenerator {
         return compat1.includes(biome2);
     }
 
-    // Add mountain pockets (volcanic and canyon within mountain regions)
+    // Add mountain pockets (volcanic and canyon within mountain regions) - synchronous version
     addMountainPockets(biomeMap, elevationMap) {
         for (let x = 0; x < 1000; x++) {
             for (let y = 0; y < 1000; y++) {
@@ -812,6 +812,49 @@ export class MapGenerator {
                     if (noise < 0.15) {
                         biomeMap[x][y] = 'mountain';
                     }
+                }
+            }
+        }
+    }
+
+    // Async version of addMountainPockets that yields to browser
+    async addMountainPocketsAsync(biomeMap, elevationMap, progressCallback = null) {
+        const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+        let processed = 0;
+        const total = 1000 * 1000;
+        const YIELD_INTERVAL = 10000; // Yield every 10,000 squares
+        
+        for (let x = 0; x < 1000; x++) {
+            for (let y = 0; y < 1000; y++) {
+                if (biomeMap[x][y] === 'mountain') {
+                    const elevation = elevationMap[x][y];
+                    const noise = this.simplexNoise(x * 0.1, y * 0.1);
+                    
+                    // Volcanic pockets (5-10% of mountain area)
+                    if (elevation > 80 && noise < 0.08) {
+                        biomeMap[x][y] = 'volcanic';
+                    }
+                    // Canyon pockets (3-5% of mountain area)
+                    else if (elevation > 70 && elevation < 85 && noise > 0.92 && noise < 0.97) {
+                        biomeMap[x][y] = 'canyon';
+                    }
+                }
+                
+                // Tundra with mountain sub-biomes
+                if (biomeMap[x][y] === 'tundra' && elevationMap[x][y] > 75) {
+                    const noise = this.simplexNoise(x * 0.08, y * 0.08);
+                    if (noise < 0.15) {
+                        biomeMap[x][y] = 'mountain';
+                    }
+                }
+                
+                processed++;
+                
+                // Yield periodically
+                if (processed % YIELD_INTERVAL === 0) {
+                    const percent = Math.round((processed / total) * 100);
+                    if (progressCallback) progressCallback(`Adding mountain pockets... ${percent}%`);
+                    await yieldToBrowser();
                 }
             }
         }
