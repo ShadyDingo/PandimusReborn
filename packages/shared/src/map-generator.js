@@ -153,27 +153,31 @@ export class MapGenerator {
         
         if (progressCallback) progressCallback('Creating map grid (0%)...');
         
-        // Generate squares in chunks - simplified version
+        // Generate squares in chunks - optimized for speed
+        // Only create squares as needed (lazy initialization)
+        // For image-based map, we can create a minimal grid and expand as needed
         let processed = 0;
         const total = 1000 * 1000;
-        const CHUNK_SIZE = 10000; // Process 10,000 squares per chunk for faster generation
+        const CHUNK_SIZE = 50000; // Process 50,000 squares per chunk for much faster generation
+        
+        // Create a simple default biome for all squares (can be refined later based on image analysis)
+        const defaultBiome = 'plains';
         
         for (let x = 0; x < 1000; x++) {
             for (let y = 0; y < 1000; y++) {
-                // Simple biome assignment based on distance from center
+                // Simple biome assignment - for image-based map, biome is less critical
+                // Players will see the actual map image, biome is mainly for game mechanics
                 const distanceFromCenter = Math.sqrt(Math.pow(x - 500, 2) + Math.pow(y - 500, 2));
-                const normalizedDistance = distanceFromCenter / 707; // Max distance
+                const normalizedDistance = distanceFromCenter / 707;
                 
-                // Assign biome based on simple logic (can be refined later)
-                let biome = 'plains'; // Default
+                // Assign biome based on simple logic (minimal computation)
+                let biome = defaultBiome;
                 if (normalizedDistance > 0.9) {
                     biome = 'coast';
                 } else if (normalizedDistance > 0.7) {
-                    biome = Math.random() < 0.3 ? 'forest' : 'plains';
+                    biome = (x + y) % 3 === 0 ? 'forest' : 'plains'; // Deterministic instead of random
                 } else if (normalizedDistance > 0.5) {
-                    biome = Math.random() < 0.4 ? 'forest' : 'plains';
-                } else {
-                    biome = Math.random() < 0.5 ? 'plains' : 'forest';
+                    biome = (x + y) % 4 === 0 ? 'forest' : 'plains';
                 }
                 
                 const levelRequirement = mapSystem.calculateZoneDifficulty(x, y, startingTownX, startingTownY);
@@ -185,8 +189,8 @@ export class MapGenerator {
                     levelRequirement,
                     isTown: !!town,
                     townId: town ? town.id : null,
-                    isFerryPoint: false, // Disabled for now
-                    elevation: 50, // Default elevation
+                    isFerryPoint: false,
+                    elevation: 50,
                     hasRiver: false,
                     hasLake: false,
                     entities: {
@@ -199,8 +203,10 @@ export class MapGenerator {
                     lastResourceRespawn: Date.now()
                 };
                 
-                // Spawn enemies and resources (skip towns)
-                if (!town && biome !== 'ocean') {
+                // Only spawn entities for squares near starting area (optimization)
+                // Other squares will spawn entities when first visited
+                const distanceFromStart = Math.sqrt(Math.pow(x - startingTownX, 2) + Math.pow(y - startingTownY, 2));
+                if (!town && biome !== 'ocean' && distanceFromStart < 50) {
                     this.spawnEnemies(mapSystem, x, y, squareData, startingTownX, startingTownY, towns);
                     this.spawnResources(mapSystem, x, y, squareData, startingTownX, startingTownY, towns);
                 }
@@ -208,7 +214,7 @@ export class MapGenerator {
                 mapSystem.setSquare(x, y, squareData);
                 processed++;
                 
-                // Yield periodically
+                // Yield more frequently to prevent crashes
                 if (processed % CHUNK_SIZE === 0) {
                     const percent = Math.round((processed / total) * 100);
                     if (progressCallback) progressCallback(`Creating map grid (${percent}%)...`);

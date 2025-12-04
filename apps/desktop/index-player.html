@@ -2310,6 +2310,7 @@
                             <button class="btn btn-secondary" onclick="centerMapOnPlayer()" title="Center map on player">📍 Center</button>
                             <button class="btn btn-secondary" onclick="zoomMapIn()" title="Zoom in">🔍+</button>
                             <button class="btn btn-secondary" onclick="zoomMapOut()" title="Zoom out">🔍-</button>
+                            <button class="btn btn-secondary" id="biome-overlay-toggle" onclick="toggleBiomeOverlays()" title="Toggle biome color overlays">🎨 Biomes</button>
                         </div>
                     </div>
 
@@ -3485,6 +3486,7 @@
         let mapImage = null;
         let mapImageLoaded = false;
         const MAP_IMAGE_PATH = 'assets/map/world_map.png';
+        let showBiomeOverlays = false; // Toggle for biome color overlays (off by default to show map image)
 
         let mapKeyHandlerAttached = false;
         
@@ -3651,10 +3653,15 @@
                             mapCtx.globalAlpha = 1.0;
                             continue;
                         } else {
-                            // If map image is loaded, use semi-transparent biome overlay
+                            // If map image is loaded, only show biome overlay if toggle is on
                             if (mapImageLoaded && mapImage.complete) {
-                                mapCtx.fillStyle = biomeColors[biome] || '#333333';
-                                mapCtx.globalAlpha = 0.3; // Semi-transparent overlay
+                                if (showBiomeOverlays) {
+                                    mapCtx.fillStyle = biomeColors[biome] || '#333333';
+                                    mapCtx.globalAlpha = 0.15; // Very transparent overlay (15%)
+                                } else {
+                                    // Don't draw biome overlay - let image show through
+                                    continue; // Skip drawing this square's biome color
+                                }
                             } else {
                                 // No image, use full color
                                 mapCtx.fillStyle = biomeColors[biome] || '#333333';
@@ -3666,18 +3673,20 @@
                     const screenX = (x - startX) * MAP_SQUARE_SIZE * mapZoom;
                     const screenY = (y - startY) * MAP_SQUARE_SIZE * mapZoom;
                     
-                    // Only draw biome overlay if map image is loaded, otherwise draw full square
-                    if (mapImageLoaded && mapImage.complete && isExplored) {
-                        // Draw semi-transparent biome overlay
-                        mapCtx.fillRect(screenX, screenY, MAP_SQUARE_SIZE * mapZoom, MAP_SQUARE_SIZE * mapZoom);
-                    } else if (!mapImageLoaded || !mapImage.complete) {
+                    // Only draw biome overlay if:
+                    // 1. Map image not loaded (fallback mode), OR
+                    // 2. Map image loaded AND biome overlays are enabled
+                    if (!mapImageLoaded || !mapImage.complete) {
                         // Draw full biome square when no image
+                        mapCtx.fillRect(screenX, screenY, MAP_SQUARE_SIZE * mapZoom, MAP_SQUARE_SIZE * mapZoom);
+                    } else if (mapImageLoaded && mapImage.complete && isExplored && showBiomeOverlays) {
+                        // Draw very transparent biome overlay only if toggle is on
                         mapCtx.fillRect(screenX, screenY, MAP_SQUARE_SIZE * mapZoom, MAP_SQUARE_SIZE * mapZoom);
                     }
                     
-                    // Draw grid lines (subtle)
-                    if (mapImageLoaded && mapImage.complete) {
-                        mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    // Draw grid lines (very subtle, only if image is loaded)
+                    if (mapImageLoaded && mapImage.complete && mapZoom >= 2) {
+                        mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
                         mapCtx.lineWidth = 0.5;
                         mapCtx.strokeRect(screenX, screenY, MAP_SQUARE_SIZE * mapZoom, MAP_SQUARE_SIZE * mapZoom);
                     }
@@ -4357,6 +4366,16 @@ Experience: ${enemy.exp}
                 initializeMapRenderer();
                 renderMap();
             }
+        }
+
+        function toggleBiomeOverlays() {
+            showBiomeOverlays = !showBiomeOverlays;
+            const toggleBtn = document.getElementById('biome-overlay-toggle');
+            if (toggleBtn) {
+                toggleBtn.style.background = showBiomeOverlays ? '#8b4513' : '';
+                toggleBtn.style.color = showBiomeOverlays ? '#fff' : '';
+            }
+            renderMap(); // Re-render with new overlay setting
         }
 
         function saveGameState() {
