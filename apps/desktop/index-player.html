@@ -4179,8 +4179,10 @@ Experience: ${enemy.exp}
             if (!engine.mapGenerated) {
                 showMapLoadingIndicator();
                 engine.generateMap((progress) => {
+                    console.log('Map generation progress:', progress);
                     updateMapLoadingIndicator(progress);
                 }).then(() => {
+                    console.log('Map generation completed successfully');
                     hideMapLoadingIndicator();
                     // Center viewport on player
                     const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
@@ -4194,8 +4196,9 @@ Experience: ${enemy.exp}
                     renderMap();
                 }).catch(err => {
                     console.error('Map generation failed:', err);
+                    console.error('Error stack:', err.stack);
                     hideMapLoadingIndicator();
-                    alert('Failed to generate map. Please try again.');
+                    alert('Failed to generate map: ' + (err.message || 'Unknown error') + '. Please check console for details.');
                 });
             } else {
                 // Map already generated, just render it

@@ -152,7 +152,7 @@ export class MapGenerator {
         await yieldToBrowser();
         
         if (progressCallback) progressCallback('Generating ferry points...');
-        const ferryPoints = this.generateFerryPoints(continentMap, startingTownX, startingTownY);
+        const ferryPoints = await this.generateFerryPointsAsync(continentMap, startingTownX, startingTownY, progressCallback);
         await yieldToBrowser();
         
         if (progressCallback) progressCallback('Placing towns...');
@@ -446,7 +446,7 @@ export class MapGenerator {
         return lakeSquares;
     }
 
-    // Generate ferry points for ocean traversal
+    // Generate ferry points for ocean traversal (synchronous version)
     generateFerryPoints(continentMap, startingTownX, startingTownY) {
         const ferryPoints = [];
         
@@ -477,6 +477,58 @@ export class MapGenerator {
             if (closestMainContinentPoint && minDistance < 200) {
                 ferryPoints.push(closestMainContinentPoint);
                 ferryPoints.push({ x: landmass.centerX, y: landmass.centerY });
+            }
+        }
+        
+        return ferryPoints;
+    }
+
+    // Async version of generateFerryPoints
+    async generateFerryPointsAsync(continentMap, startingTownX, startingTownY, progressCallback = null) {
+        const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+        const ferryPoints = [];
+        
+        if (progressCallback) progressCallback('Finding landmasses...');
+        // Find major landmasses (islands) - this can be slow, but usually there aren't many
+        const landmasses = this.findLandmasses(continentMap);
+        await yieldToBrowser();
+        
+        if (progressCallback) progressCallback(`Connecting ${landmasses.length} landmasses...`);
+        
+        // Connect main continent to islands with ferry points
+        for (let i = 0; i < landmasses.length; i++) {
+            const landmass = landmasses[i];
+            if (landmass.isMainContinent) continue;
+            
+            if (progressCallback && i % 2 === 0) {
+                progressCallback(`Finding ferry routes... ${i + 1}/${landmasses.length}`);
+            }
+            
+            // Find closest point on main continent (optimized: only check every 10th square)
+            let closestMainContinentPoint = null;
+            let minDistance = Infinity;
+            
+            for (let x = 0; x < 1000; x += 5) { // Check every 5th square to speed up
+                for (let y = 0; y < 1000; y += 5) {
+                    if (continentMap[x][y] && this.isOnMainContinent(x, y, startingTownX, startingTownY)) {
+                        const dist = Math.sqrt(Math.pow(landmass.centerX - x, 2) + Math.pow(landmass.centerY - y, 2));
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            closestMainContinentPoint = { x, y };
+                        }
+                    }
+                }
+            }
+            
+            // Add ferry points on both sides
+            if (closestMainContinentPoint && minDistance < 200) {
+                ferryPoints.push(closestMainContinentPoint);
+                ferryPoints.push({ x: landmass.centerX, y: landmass.centerY });
+            }
+            
+            // Yield periodically
+            if (i % 3 === 0) {
+                await yieldToBrowser();
             }
         }
         
@@ -673,6 +725,7 @@ export class MapGenerator {
         await this.addMountainPocketsAsync(biomeMap, elevationMap, progressCallback);
         await yieldToBrowser();
         
+        if (progressCallback) progressCallback('Biome generation complete!');
         return biomeMap;
     }
 
