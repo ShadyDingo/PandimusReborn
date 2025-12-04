@@ -148,7 +148,7 @@ export class MapGenerator {
         await yieldToBrowser();
         
         if (progressCallback) progressCallback('Generating biomes...');
-        const biomeMap = this.generateBiomes(elevationMap, continentMap, waterFeatures, startingTownX, startingTownY);
+        const biomeMap = await this.generateBiomesAsync(elevationMap, continentMap, waterFeatures, startingTownX, startingTownY, progressCallback);
         await yieldToBrowser();
         
         if (progressCallback) progressCallback('Generating ferry points...');
@@ -550,7 +550,7 @@ export class MapGenerator {
         return distance < 400;
     }
 
-    // Generate biomes with geographic logic
+    // Generate biomes with geographic logic (synchronous version)
     generateBiomes(elevationMap, continentMap, waterFeatures, startingTownX, startingTownY) {
         const biomeMap = [];
         const noiseScale = 0.05;
@@ -591,6 +591,87 @@ export class MapGenerator {
         
         // Second pass: add mountain pockets (volcanic, canyon)
         this.addMountainPockets(biomeMap, elevationMap);
+        
+        return biomeMap;
+    }
+
+    // Async version of generateBiomes that yields to browser
+    async generateBiomesAsync(elevationMap, continentMap, waterFeatures, startingTownX, startingTownY, progressCallback = null) {
+        const biomeMap = [];
+        const noiseScale = 0.05;
+        const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+        let processed = 0;
+        const total = 1000 * 1000;
+        const YIELD_INTERVAL = 5000; // Yield every 5000 squares
+        
+        // Pre-compute water feature sets for faster lookup
+        const riverSet = new Set(waterFeatures.rivers.map(r => `${r.x},${r.y}`));
+        const lakeSet = new Set(waterFeatures.lakes.map(l => `${l.x},${l.y}`));
+        
+        for (let x = 0; x < 1000; x++) {
+            biomeMap[x] = [];
+            for (let y = 0; y < 1000; y++) {
+                // Check if ocean
+                if (!continentMap[x][y]) {
+                    biomeMap[x][y] = 'ocean';
+                    processed++;
+                    if (processed % YIELD_INTERVAL === 0) {
+                        const percent = Math.round((processed / total) * 100);
+                        if (progressCallback) progressCallback(`Generating biomes... ${percent}%`);
+                        await yieldToBrowser();
+                    }
+                    continue;
+                }
+                
+                // Check if river (using Set for O(1) lookup)
+                if (riverSet.has(`${x},${y}`)) {
+                    biomeMap[x][y] = 'river';
+                    processed++;
+                    if (processed % YIELD_INTERVAL === 0) {
+                        const percent = Math.round((processed / total) * 100);
+                        if (progressCallback) progressCallback(`Generating biomes... ${percent}%`);
+                        await yieldToBrowser();
+                    }
+                    continue;
+                }
+                
+                // Check if lake (using Set for O(1) lookup)
+                if (lakeSet.has(`${x},${y}`)) {
+                    biomeMap[x][y] = 'lake';
+                    processed++;
+                    if (processed % YIELD_INTERVAL === 0) {
+                        const percent = Math.round((processed / total) * 100);
+                        if (progressCallback) progressCallback(`Generating biomes... ${percent}%`);
+                        await yieldToBrowser();
+                    }
+                    continue;
+                }
+                
+                // Get neighboring biomes for compatibility check
+                const neighbors = this.getNeighborBiomes(x, y, biomeMap);
+                const elevation = elevationMap[x][y];
+                const noise = this.simplexNoise(x * noiseScale, y * noiseScale);
+                const distanceFromCenter = Math.sqrt(Math.pow(x - startingTownX, 2) + Math.pow(y - startingTownY, 2));
+                const normalizedDistance = distanceFromCenter / 707;
+                
+                // Select biome with geographic logic
+                const biome = this.selectBiomeWithLogic(noise, x, y, elevation, normalizedDistance, neighbors);
+                biomeMap[x][y] = biome;
+                processed++;
+                
+                // Yield periodically
+                if (processed % YIELD_INTERVAL === 0) {
+                    const percent = Math.round((processed / total) * 100);
+                    if (progressCallback) progressCallback(`Generating biomes... ${percent}%`);
+                    await yieldToBrowser();
+                }
+            }
+        }
+        
+        // Second pass: add mountain pockets (volcanic, canyon)
+        if (progressCallback) progressCallback('Adding mountain pockets...');
+        this.addMountainPockets(biomeMap, elevationMap);
+        await yieldToBrowser();
         
         return biomeMap;
     }
