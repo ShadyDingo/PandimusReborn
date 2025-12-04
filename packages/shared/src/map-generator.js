@@ -41,7 +41,7 @@ export class MapGenerator {
         };
     }
 
-    // Generate the entire 1000x1000 map
+    // Generate the entire 1000x1000 map (synchronous version - may freeze UI)
     generateMap(mapSystem, startingTownX = 500, startingTownY = 500) {
         console.log('Generating 1000x1000 continent-shaped map...');
         
@@ -125,6 +125,109 @@ export class MapGenerator {
             biomeMap: biomeMap
         };
         
+        return { towns, biomeMap, mapData };
+    }
+
+    // Async version that yields to browser to prevent UI freezing
+    async generateMapAsync(mapSystem, startingTownX = 500, startingTownY = 500, progressCallback = null) {
+        if (progressCallback) progressCallback('Starting map generation...');
+        
+        // Generate in chunks with yields to prevent blocking
+        const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
+        
+        if (progressCallback) progressCallback('Generating elevation map...');
+        const elevationMap = this.generateElevationMap();
+        await yieldToBrowser();
+        
+        if (progressCallback) progressCallback('Generating continent shape...');
+        const continentMap = this.generateContinentShape(elevationMap, startingTownX, startingTownY);
+        await yieldToBrowser();
+        
+        if (progressCallback) progressCallback('Generating water features...');
+        const waterFeatures = this.generateWaterFeatures(elevationMap, continentMap, startingTownX, startingTownY);
+        await yieldToBrowser();
+        
+        if (progressCallback) progressCallback('Generating biomes...');
+        const biomeMap = this.generateBiomes(elevationMap, continentMap, waterFeatures, startingTownX, startingTownY);
+        await yieldToBrowser();
+        
+        if (progressCallback) progressCallback('Generating ferry points...');
+        const ferryPoints = this.generateFerryPoints(continentMap, startingTownX, startingTownY);
+        await yieldToBrowser();
+        
+        if (progressCallback) progressCallback('Placing towns...');
+        const towns = this.generateTowns(startingTownX, startingTownY, continentMap);
+        await yieldToBrowser();
+        
+        // Generate squares in chunks
+        if (progressCallback) progressCallback('Creating map squares (0%)...');
+        let processed = 0;
+        const total = 1000 * 1000;
+        const CHUNK_SIZE = 5000; // Process 5000 squares per chunk
+        
+        for (let x = 0; x < 1000; x++) {
+            for (let y = 0; y < 1000; y++) {
+                const biome = biomeMap[x][y];
+                const levelRequirement = mapSystem.calculateZoneDifficulty(x, y, startingTownX, startingTownY);
+                
+                const town = towns.find(t => t.x === x && t.y === y);
+                const isFerryPoint = ferryPoints.some(fp => fp.x === x && fp.y === y);
+                const hasRiver = waterFeatures.rivers.some(r => r.x === x && r.y === y);
+                const hasLake = waterFeatures.lakes.some(l => l.x === x && l.y === y);
+                
+                const squareData = {
+                    biome,
+                    zone: this.getZoneName(biome, levelRequirement),
+                    levelRequirement,
+                    isTown: !!town,
+                    townId: town ? town.id : null,
+                    isFerryPoint: isFerryPoint,
+                    elevation: elevationMap[x][y],
+                    hasRiver: hasRiver,
+                    hasLake: hasLake,
+                    entities: {
+                        enemies: [],
+                        npcs: [],
+                        players: [],
+                        items: []
+                    },
+                    lastEnemyRespawn: Date.now(),
+                    lastResourceRespawn: Date.now()
+                };
+                
+                if (!town && biome !== 'ocean') {
+                    this.spawnEnemies(mapSystem, x, y, squareData, startingTownX, startingTownY, towns);
+                    this.spawnResources(mapSystem, x, y, squareData, startingTownX, startingTownY, towns);
+                }
+                
+                mapSystem.setSquare(x, y, squareData);
+                processed++;
+                
+                // Yield every CHUNK_SIZE squares
+                if (processed % CHUNK_SIZE === 0) {
+                    const percent = Math.round((processed / total) * 100);
+                    if (progressCallback) progressCallback(`Creating map squares (${percent}%)...`);
+                    await yieldToBrowser();
+                }
+            }
+        }
+        
+        console.log(`Map generated with ${towns.length} towns, ${waterFeatures.rivers.length} river segments, ${waterFeatures.lakes.length} lake squares, ${ferryPoints.length} ferry points`);
+        
+        const mapData = {
+            version: MAP_VERSION,
+            seed: this.seed,
+            generatedAt: new Date().toISOString(),
+            towns: towns,
+            rivers: waterFeatures.rivers,
+            lakes: waterFeatures.lakes,
+            oceans: waterFeatures.oceans,
+            ferryPoints: ferryPoints,
+            elevation: elevationMap,
+            biomeMap: biomeMap
+        };
+        
+        if (progressCallback) progressCallback('Map generation complete!');
         return { towns, biomeMap, mapData };
     }
 

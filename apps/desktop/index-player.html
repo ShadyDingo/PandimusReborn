@@ -4172,26 +4172,71 @@ Experience: ${enemy.exp}
                 return;
             }
             
-            // Ensure map is generated
-            if (!engine.mapGenerated) {
-                engine.generateMap();
-            }
-            
             // Initialize map renderer
             initializeMapRenderer();
             
-            // Center viewport on player
-            const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
-            mapViewportX = playerPos.x;
-            mapViewportY = playerPos.y;
-            
-            // Check respawns for current square
-            checkSquareRespawns();
-            
-            // Render the map
-            setTimeout(() => {
-                renderMap();
-            }, 100);
+            // Show loading indicator if map needs to be generated
+            if (!engine.mapGenerated) {
+                showMapLoadingIndicator();
+                engine.generateMap((progress) => {
+                    updateMapLoadingIndicator(progress);
+                }).then(() => {
+                    hideMapLoadingIndicator();
+                    // Center viewport on player
+                    const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+                    mapViewportX = playerPos.x;
+                    mapViewportY = playerPos.y;
+                    
+                    // Check respawns for current square
+                    checkSquareRespawns();
+                    
+                    // Render the map
+                    renderMap();
+                }).catch(err => {
+                    console.error('Map generation failed:', err);
+                    hideMapLoadingIndicator();
+                    alert('Failed to generate map. Please try again.');
+                });
+            } else {
+                // Map already generated, just render it
+                const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+                mapViewportX = playerPos.x;
+                mapViewportY = playerPos.y;
+                
+                // Check respawns for current square
+                checkSquareRespawns();
+                
+                // Render the map
+                setTimeout(() => {
+                    renderMap();
+                }, 100);
+            }
+        }
+        
+        function showMapLoadingIndicator() {
+            let loadingDiv = document.getElementById('map-loading-indicator');
+            if (!loadingDiv) {
+                loadingDiv = document.createElement('div');
+                loadingDiv.id = 'map-loading-indicator';
+                loadingDiv.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 20px; border-radius: 8px; z-index: 10000; text-align: center;';
+                loadingDiv.innerHTML = '<div style="margin-bottom: 10px;">Generating Map...</div><div id="map-loading-progress" style="font-size: 14px; color: #90EE90;">Starting...</div>';
+                document.body.appendChild(loadingDiv);
+            }
+            loadingDiv.style.display = 'block';
+        }
+        
+        function updateMapLoadingIndicator(progress) {
+            const progressDiv = document.getElementById('map-loading-progress');
+            if (progressDiv) {
+                progressDiv.textContent = progress;
+            }
+        }
+        
+        function hideMapLoadingIndicator() {
+            const loadingDiv = document.getElementById('map-loading-indicator');
+            if (loadingDiv) {
+                loadingDiv.style.display = 'none';
+            }
         }
 
         function checkSquareRespawns() {

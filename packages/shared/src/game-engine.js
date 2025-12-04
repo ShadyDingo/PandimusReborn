@@ -111,9 +111,15 @@ export class GameEngine {
         return this.gameState.player;
     }
 
-    // Generate the map
-    generateMap() {
-        const result = this.mapGenerator.generateMap(this.mapSystem, 500, 500);
+    // Generate the map (async to prevent UI freezing)
+    async generateMap(progressCallback = null) {
+        // Check if map is already generated
+        if (this.mapGenerated) {
+            return { towns: Array.from(this.townSystem.towns.values()), biomeMap: null };
+        }
+        
+        // Use the async version to prevent UI freezing
+        const result = await this.mapGenerator.generateMapAsync(this.mapSystem, 500, 500, progressCallback);
         
         // Register all towns
         result.towns.forEach(town => {
