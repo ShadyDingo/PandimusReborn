@@ -4628,6 +4628,12 @@ Experience: ${enemy.exp}
                 initializeMapRenderer();
                 // Update zoom level button states
                 updateZoomLevelButtons();
+                // Update grid toggle button state
+                const gridToggleBtn = document.getElementById('grid-toggle');
+                if (gridToggleBtn) {
+                    gridToggleBtn.style.background = showGrid ? '#8b4513' : '';
+                    gridToggleBtn.style.color = showGrid ? '#fff' : '';
+                }
                 // Re-render after a short delay to ensure container is sized
                 setTimeout(() => {
                     renderMap();
