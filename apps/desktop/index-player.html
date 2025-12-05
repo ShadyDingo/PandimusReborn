@@ -1739,7 +1739,7 @@
                         <h3 style="color: #8b4513; margin-bottom: 1rem; text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);">Create Your Character</h3>
                         <p style="color: #2d1b0e; margin-bottom: 1.5rem; text-shadow: 1px 1px 1px rgba(255, 255, 255, 0.3);">No character created yet. Create one to start your adventure!</p>
                         <div class="name-input-section">
-                            <input type="text" id="char-name-input" class="character-name-input" placeholder="Enter character name" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 2px solid #4c51bf; border-radius: 8px; font-size: 1rem;">
+                            <input type="text" id="char-name-input" class="character-name-input" placeholder="Enter character name" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 2px solid #4c51bf; border-radius: 8px; font-size: 1rem; background: #fff; color: #000; pointer-events: auto;" autocomplete="off" tabindex="0" onfocus="this.select()" onkeydown="if(event.key === 'Enter') { createNewCharacter(); }">
                             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                                 <button class="btn btn-primary" onclick="createNewCharacter()">Create Character</button>
                                 <button class="btn btn-secondary" onclick="testFunction()">Test JS</button>
@@ -3470,6 +3470,25 @@
             
             updateCharacterDisplay();
             updateToggleButtons(); // Ensure toggle buttons are updated
+            
+            // Ensure name input is enabled and focused when showing character screen
+            setTimeout(() => {
+                const nameInput = document.getElementById('char-name-input');
+                if (nameInput) {
+                    // Remove any disabled/readonly attributes
+                    nameInput.disabled = false;
+                    nameInput.readOnly = false;
+                    nameInput.removeAttribute('disabled');
+                    nameInput.removeAttribute('readonly');
+                    
+                    // Focus the input if no character exists
+                    const noCharSection = document.getElementById('no-character-section');
+                    if (noCharSection && noCharSection.style.display !== 'none') {
+                        nameInput.focus();
+                        nameInput.select();
+                    }
+                }
+            }, 100);
         }
 
         // Map rendering system
@@ -4873,22 +4892,58 @@ Experience: ${enemy.exp}
         function createNewCharacter() {
             console.log("=== CREATE CHARACTER FUNCTION CALLED ===");
             
-            // Get the name input
-            const nameInput = document.getElementById('char-name-input');
+            // Get the name input - try multiple ways to ensure we get it
+            let nameInput = document.getElementById('char-name-input');
+            
+            // If not found, try querySelector
+            if (!nameInput) {
+                nameInput = document.querySelector('#char-name-input');
+            }
+            
+            // If still not found, try by class
+            if (!nameInput) {
+                nameInput = document.querySelector('.character-name-input');
+            }
+            
             console.log("Name input element:", nameInput);
+            console.log("Input value:", nameInput ? nameInput.value : 'N/A');
+            console.log("Input disabled:", nameInput ? nameInput.disabled : 'N/A');
+            console.log("Input readonly:", nameInput ? nameInput.readOnly : 'N/A');
             
             if (!nameInput) {
-                alert("Error: Name input field not found!");
+                alert("Error: Name input field not found! Please refresh the page.");
                 return;
             }
             
-            const name = nameInput.value.trim();
-            console.log("Name entered:", name);
+            // Ensure input is enabled and can receive input
+            nameInput.disabled = false;
+            nameInput.readOnly = false;
+            nameInput.removeAttribute('disabled');
+            nameInput.removeAttribute('readonly');
             
-            if (!name || name.length === 0) {
-                alert("Please enter a character name!");
-                return;
-            }
+            // Focus the input to ensure it's active
+            nameInput.focus();
+            
+            // Add a small delay to ensure focus is set, then get the value
+            setTimeout(() => {
+                // Get the value
+                const name = nameInput.value ? nameInput.value.trim() : '';
+                console.log("Name entered (trimmed):", name);
+                console.log("Name length:", name.length);
+                
+                if (!name || name.length === 0) {
+                    alert("Please enter a character name in the text field above!");
+                    nameInput.focus();
+                    nameInput.select();
+                    return;
+                }
+                
+                // Continue with character creation...
+                createCharacterWithName(name);
+            }, 50);
+        }
+        
+        function createCharacterWithName(name) {
             
         // Create the character
         player = {
