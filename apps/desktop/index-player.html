@@ -3778,24 +3778,24 @@
                 }
                 
                 // Calculate position on canvas
-                const gridScaleX = window.mapGridScaleX;
-                const gridScaleY = window.mapGridScaleY;
-                const drawOffsetX = window.mapDrawOffsetX;
-                const drawOffsetY = window.mapDrawOffsetY;
-                const viewportStartX = window.mapViewportStartX;
-                const viewportStartY = window.mapViewportStartY;
+                const townGridScaleX = window.mapGridScaleX;
+                const townGridScaleY = window.mapGridScaleY;
+                const townDrawOffsetX = window.mapDrawOffsetX;
+                const townDrawOffsetY = window.mapDrawOffsetY;
+                const townViewportStartX = window.mapViewportStartX;
+                const townViewportStartY = window.mapViewportStartY;
                 
                 let screenX, screenY;
                 if (mapZoomLevel === 'full') {
-                    screenX = drawOffsetX + (town.x * gridScaleX);
-                    screenY = drawOffsetY + (town.y * gridScaleY);
+                    screenX = townDrawOffsetX + (town.x * townGridScaleX);
+                    screenY = townDrawOffsetY + (town.y * townGridScaleY);
                 } else {
-                    screenX = drawOffsetX + ((town.x - viewportStartX) * gridScaleX);
-                    screenY = drawOffsetY + ((town.y - viewportStartY) * gridScaleY);
+                    screenX = townDrawOffsetX + ((town.x - townViewportStartX) * townGridScaleX);
+                    screenY = townDrawOffsetY + ((town.y - townViewportStartY) * townGridScaleY);
                 }
                 
                 // Draw town marker (larger, more visible)
-                const markerSize = Math.max(8, gridScaleX * 2);
+                const markerSize = Math.max(8, townGridScaleX * 2);
                 
                 // Draw outer glow
                 mapCtx.shadowColor = '#FFD700';
@@ -3844,17 +3844,15 @@
             */
             
             // Render player marker (always centered in viewport for close/medium, positioned for full)
-            const gridScaleX = window.mapGridScaleX;
-            const gridScaleY = window.mapGridScaleY;
-            const drawOffsetX = window.mapDrawOffsetX;
-            const drawOffsetY = window.mapDrawOffsetY;
-            const viewportStartX = window.mapViewportStartX;
-            const viewportStartY = window.mapViewportStartY;
+            const playerGridScaleX = window.mapGridScaleX;
+            const playerGridScaleY = window.mapGridScaleY;
+            const playerDrawOffsetX = window.mapDrawOffsetX;
+            const playerDrawOffsetY = window.mapDrawOffsetY;
             
             let playerScreenX, playerScreenY;
             if (mapZoomLevel === 'full') {
-                playerScreenX = drawOffsetX + (playerPos.x * gridScaleX);
-                playerScreenY = drawOffsetY + (playerPos.y * gridScaleY);
+                playerScreenX = playerDrawOffsetX + (playerPos.x * playerGridScaleX);
+                playerScreenY = playerDrawOffsetY + (playerPos.y * playerGridScaleY);
             } else {
                 // Center player in viewport for close/medium views
                 playerScreenX = mapCanvas.width / 2;
@@ -3862,7 +3860,7 @@
             }
             
             // Draw player marker (larger, glowing red circle)
-            const playerMarkerSize = Math.max(6, gridScaleX * 1.5);
+            const playerMarkerSize = Math.max(6, playerGridScaleX * 1.5);
             
             // Draw outer glow
             mapCtx.shadowColor = '#FF0000';
