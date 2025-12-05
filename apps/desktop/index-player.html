@@ -4837,7 +4837,17 @@ Experience: ${enemy.exp}
             
             gameData.attributeToggles[attributeName] = state;
             updateToggleButtonState(attributeName, state);
+            
+            // Apply immediate change based on toggle state (same as skills)
+            if (state === 'increase') {
+                modifyAttribute(attributeName, 0.1); // Increase by 0.1
+            } else if (state === 'decrease') {
+                modifyAttribute(attributeName, -0.1); // Decrease by 0.1
+            }
+            // 'lock' state means no change
+            
             saveGameData();
+            updateCharacterDisplay();
             
             console.log(`${attributeName} toggle set to: ${state}`);
         }
@@ -4849,14 +4859,22 @@ Experience: ${enemy.exp}
             }
             
             gameData.skillToggles[skillName] = state;
-            updateToggleButtons();
+            updateToggleButtonState(skillName, state);
+            
+            // Apply immediate change based on toggle state (same as attributes)
+            if (state === 'increase') {
+                modifySkill(skillName, 0.1); // Increase by 0.1
+            } else if (state === 'decrease') {
+                modifySkill(skillName, -0.1); // Decrease by 0.1
+            }
+            // 'lock' state means no change
             
             // Recalculate HP if Endurance skill changed
             if (skillName === 'Endurance') {
                 recalculateHealth(); // Use centralized function to ensure consistency
-                updateCharacterDisplay();
             }
             
+            updateCharacterDisplay();
             saveGameData();
             
             console.log(`${skillName} toggle set to: ${state}`);
@@ -5626,21 +5644,7 @@ Experience: ${enemy.exp}
             updateCharacterDisplay();
         }
 
-        // Toggle functions for attributes and skills
-        // This function is defined earlier, removing duplicate
-
-        function toggleSkill(skillName, state) {
-            if (!player) {
-                alert("Please create a character first!");
-                return;
-            }
-            
-            gameData.skillToggles[skillName] = state;
-            updateToggleButtonState(skillName, state);
-            saveGameData();
-            
-            console.log(`Set ${skillName} toggle to ${state}`);
-        }
+        // Duplicate toggleSkill removed - using the one defined earlier
 
         function updateToggleButtonState(name, state) {
             // Find all toggle buttons for this attribute/skill
