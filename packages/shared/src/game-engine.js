@@ -103,9 +103,7 @@ export class GameEngine {
         this.gameState.lastTown = "starting_town";
         this.gameState.discoveredTowns = ["starting_town"];
         
-        // Initialize fog of war with starting town area explored
-        this.fogOfWar.exploreArea(500, 500, 3);
-        this.updateExploredSquares();
+        // Fog of war removed - map is always fully visible
 
         this.calculateDerivedStats();
         return this.gameState.player;
@@ -231,9 +229,7 @@ export class GameEngine {
         // Update position
         this.gameState.mapPosition = { x: moveResult.x, y: moveResult.y };
         
-        // Explore the new square
-        this.fogOfWar.exploreSquare(moveResult.x, moveResult.y);
-        this.updateExploredSquares();
+        // Fog of war removed - map is always fully visible
         
         // Check if this is a town
         const town = this.townSystem.getTownAt(moveResult.x, moveResult.y);
