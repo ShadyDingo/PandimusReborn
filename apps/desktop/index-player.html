@@ -2321,6 +2321,7 @@
                             <button class="btn btn-secondary" data-zoom-level="medium" onclick="setMapZoomLevel('medium')" title="Medium view (100x100)">🔍 Medium</button>
                             <button class="btn btn-secondary" data-zoom-level="full" onclick="setMapZoomLevel('full')" title="Full map view">🔍 Full</button>
                             <button class="btn btn-secondary" id="biome-overlay-toggle" onclick="toggleBiomeOverlays()" title="Toggle biome color overlays">🎨 Biomes</button>
+                            <button class="btn btn-secondary" id="grid-toggle" onclick="toggleGrid()" title="Toggle grid overlay">⊞ Grid</button>
                         </div>
                     </div>
 
@@ -3516,6 +3517,7 @@
         // Try multiple paths for Electron compatibility
         const MAP_IMAGE_PATH = '../assets/map/world_map.png'; // Relative to apps/desktop/
         let showBiomeOverlays = false; // Toggle for biome color overlays (off by default to show map image)
+        let showGrid = true; // Toggle for grid overlay (on by default)
 
         let mapKeyHandlerAttached = false;
         
@@ -4517,6 +4519,16 @@ Experience: ${enemy.exp}
                 toggleBtn.style.color = showBiomeOverlays ? '#fff' : '';
             }
             renderMap(); // Re-render with new overlay setting
+        }
+        
+        function toggleGrid() {
+            showGrid = !showGrid;
+            const toggleBtn = document.getElementById('grid-toggle');
+            if (toggleBtn) {
+                toggleBtn.style.background = showGrid ? '#8b4513' : '';
+                toggleBtn.style.color = showGrid ? '#fff' : '';
+            }
+            renderMap(); // Re-render with grid visibility
         }
 
         function saveGameState() {
