@@ -3771,6 +3771,64 @@
             // Reset alpha
             mapCtx.globalAlpha = 1.0;
             
+            // Render grid overlay if enabled
+            if (showGrid && mapImageLoaded && mapImage.complete) {
+                const gridScaleX = window.mapGridScaleX;
+                const gridScaleY = window.mapGridScaleY;
+                const drawOffsetX = window.mapDrawOffsetX;
+                const drawOffsetY = window.mapDrawOffsetY;
+                const viewportStartX = window.mapViewportStartX;
+                const viewportStartY = window.mapViewportStartY;
+                
+                // Calculate grid line spacing based on zoom level
+                // For close view, show every square; for medium, every 5; for full, every 25
+                let gridSpacing = 1;
+                if (mapZoomLevel === 'medium') {
+                    gridSpacing = 5;
+                } else if (mapZoomLevel === 'full') {
+                    gridSpacing = 25;
+                }
+                
+                mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                mapCtx.lineWidth = 0.5;
+                
+                // Draw vertical grid lines
+                for (let x = startX; x <= endX; x += gridSpacing) {
+                    let screenX;
+                    if (mapZoomLevel === 'full') {
+                        screenX = drawOffsetX + (x * gridScaleX);
+                    } else {
+                        screenX = drawOffsetX + ((x - viewportStartX) * gridScaleX);
+                    }
+                    
+                    // Only draw if within canvas bounds
+                    if (screenX >= drawOffsetX && screenX <= (drawOffsetX + (mapZoomLevel === 'full' ? (mapCanvas.width - drawOffsetX * 2) : mapCanvas.width))) {
+                        mapCtx.beginPath();
+                        mapCtx.moveTo(screenX, drawOffsetY);
+                        mapCtx.lineTo(screenX, drawOffsetY + (mapZoomLevel === 'full' ? (mapCanvas.height - drawOffsetY * 2) : mapCanvas.height));
+                        mapCtx.stroke();
+                    }
+                }
+                
+                // Draw horizontal grid lines
+                for (let y = startY; y <= endY; y += gridSpacing) {
+                    let screenY;
+                    if (mapZoomLevel === 'full') {
+                        screenY = drawOffsetY + (y * gridScaleY);
+                    } else {
+                        screenY = drawOffsetY + ((y - viewportStartY) * gridScaleY);
+                    }
+                    
+                    // Only draw if within canvas bounds
+                    if (screenY >= drawOffsetY && screenY <= (drawOffsetY + (mapZoomLevel === 'full' ? (mapCanvas.height - drawOffsetY * 2) : mapCanvas.height))) {
+                        mapCtx.beginPath();
+                        mapCtx.moveTo(drawOffsetX, screenY);
+                        mapCtx.lineTo(drawOffsetX + (mapZoomLevel === 'full' ? (mapCanvas.width - drawOffsetX * 2) : mapCanvas.width), screenY);
+                        mapCtx.stroke();
+                    }
+                }
+            }
+            
             // Render towns (only if within viewport)
             const towns = Array.from(engine.townSystem.towns.values());
             towns.forEach(town => {
