@@ -4556,6 +4556,8 @@ Experience: ${enemy.exp}
             // Initialize map renderer (will resize canvas to container)
             setTimeout(() => {
                 initializeMapRenderer();
+                // Update zoom level button states
+                updateZoomLevelButtons();
                 // Re-render after a short delay to ensure container is sized
                 setTimeout(() => {
                     renderMap();
