@@ -3495,7 +3495,8 @@
         // Map image
         let mapImage = null;
         let mapImageLoaded = false;
-        const MAP_IMAGE_PATH = 'assets/map/world_map.png';
+        // Try multiple paths for Electron compatibility
+        const MAP_IMAGE_PATH = '../assets/map/world_map.png'; // Relative to apps/desktop/
         let showBiomeOverlays = false; // Toggle for biome color overlays (off by default to show map image)
 
         let mapKeyHandlerAttached = false;
@@ -3532,10 +3533,10 @@
                     
                     // Try alternative paths for Electron
                     const alternativePaths = [
-                        './assets/map/world_map.png',
-                        '../assets/map/world_map.png',
-                        '../../assets/map/world_map.png',
-                        'file:///' + __dirname.replace(/\\/g, '/') + '/assets/map/world_map.png'
+                        '../assets/map/world_map.png', // From apps/desktop/
+                        '../../assets/map/world_map.png', // From root
+                        './assets/map/world_map.png', // Same directory
+                        'assets/map/world_map.png' // Root relative
                     ];
                     
                     let pathIndex = 0;
