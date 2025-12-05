@@ -5267,6 +5267,21 @@ Experience: ${enemy.exp}
                 document.getElementById('no-character-section').style.display = 'block';
                 document.getElementById('character-display-section').style.display = 'none';
                 
+                // Enable and focus the name input field
+                setTimeout(() => {
+                    const nameInput = document.getElementById('char-name-input');
+                    if (nameInput) {
+                        nameInput.disabled = false;
+                        nameInput.readOnly = false;
+                        nameInput.removeAttribute('disabled');
+                        nameInput.removeAttribute('readonly');
+                        nameInput.style.pointerEvents = 'auto';
+                        nameInput.style.opacity = '1';
+                        nameInput.focus();
+                        nameInput.select();
+                    }
+                }, 100);
+                
                 // Disable attribute buttons when no character
                 const attrButtons = ['power-decrease', 'power-increase', 'power-lock', 
                                      'dex-decrease', 'dex-increase', 'dex-lock',
@@ -7356,9 +7371,68 @@ Experience: ${enemy.exp}
         // Reset character data function
         function resetCharacterData() {
             if (confirm("Are you sure you want to reset all character data? This cannot be undone!")) {
+                // Clear all game data
                 localStorage.removeItem('pandimusGameData');
                 localStorage.removeItem('pandimusPlayerData');
-                location.reload();
+                
+                // Reset player and gameData objects
+                player = null;
+                gameData = {
+                    player: null,
+                    inventory: [],
+                    equipment: {
+                        mainhand: null,
+                        offhand: null,
+                        helmet: null,
+                        chest: null,
+                        legs: null,
+                        boots: null,
+                        ring1: null,
+                        ring2: null,
+                        ring3: null,
+                        ring4: null,
+                        necklace: null
+                    },
+                    currency: { gold: 100 },
+                    skills: {},
+                    attributeToggles: {
+                        Power: 'auto',
+                        Dexterity: 'auto',
+                        Vitality: 'auto'
+                    },
+                    skillToggles: {},
+                    prestige: { level: 0, points: 0 }
+                };
+                
+                // Reset game engine
+                if (window.gameEngine) {
+                    window.gameEngine = null;
+                }
+                
+                // Show character creation section
+                document.getElementById('no-character-section').style.display = 'block';
+                document.getElementById('character-display-section').style.display = 'none';
+                
+                // Clear and enable the name input
+                setTimeout(() => {
+                    const nameInput = document.getElementById('char-name-input');
+                    if (nameInput) {
+                        nameInput.value = '';
+                        nameInput.disabled = false;
+                        nameInput.readOnly = false;
+                        nameInput.removeAttribute('disabled');
+                        nameInput.removeAttribute('readonly');
+                        nameInput.style.pointerEvents = 'auto';
+                        nameInput.style.opacity = '1';
+                        nameInput.style.background = '#fff';
+                        nameInput.style.color = '#000';
+                        nameInput.focus();
+                        nameInput.select();
+                    }
+                }, 100);
+                
+                // Update display
+                updateCharacterDisplay();
             }
         }
 
