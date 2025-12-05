@@ -4846,42 +4846,20 @@ Experience: ${enemy.exp}
             const isPrimarySkill = ['Power', 'Dexterity', 'Vitality'].includes(skillName);
             
             if (isPrimarySkill) {
-                // Primary Skills use attributeToggles but work the same way
+                // Primary Skills use attributeToggles - just set the toggle state
+                // The actual training happens during combat, not here
                 gameData.attributeToggles[skillName] = state;
-                
-                // Apply immediate change
-                if (state === 'increase') {
-                    modifyAttribute(skillName, 0.1);
-                } else if (state === 'decrease') {
-                    modifyAttribute(skillName, -0.1);
-                }
-                
-                // Recalculate HP if Vitality changed
-                if (skillName === 'Vitality') {
-                    recalculateHealth();
-                }
             } else {
-                // Secondary Skills use skillToggles
+                // Secondary Skills use skillToggles - just set the toggle state
+                // The actual training happens during combat, not here
                 gameData.skillToggles[skillName] = state;
-                
-                // Apply immediate change
-                if (state === 'increase') {
-                    modifySkill(skillName, 0.1);
-                } else if (state === 'decrease') {
-                    modifySkill(skillName, -0.1);
-                }
-                
-                // Recalculate HP if Endurance skill changed
-                if (skillName === 'Endurance') {
-                    recalculateHealth();
-                }
             }
             
+            // Update button states to show which toggle is active
             updateToggleButtonState(skillName, state);
-            updateCharacterDisplay();
             saveGameData();
             
-            console.log(`${skillName} toggle set to: ${state}`);
+            console.log(`${skillName} toggle set to: ${state} (will train during combat)`);
         }
 
         function updateToggleButtons() {
