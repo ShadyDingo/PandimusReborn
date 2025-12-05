@@ -2317,6 +2317,9 @@
                             <button class="btn btn-secondary" onclick="centerMapOnPlayer()" title="Center map on player">📍 Center</button>
                             <button class="btn btn-secondary" onclick="zoomMapIn()" title="Zoom in">🔍+</button>
                             <button class="btn btn-secondary" onclick="zoomMapOut()" title="Zoom out">🔍-</button>
+                            <button class="btn btn-secondary" data-zoom-level="close" onclick="setMapZoomLevel('close')" title="Close view (20x20)">🔍 Close</button>
+                            <button class="btn btn-secondary" data-zoom-level="medium" onclick="setMapZoomLevel('medium')" title="Medium view (100x100)">🔍 Medium</button>
+                            <button class="btn btn-secondary" data-zoom-level="full" onclick="setMapZoomLevel('full')" title="Full map view">🔍 Full</button>
                             <button class="btn btn-secondary" id="biome-overlay-toggle" onclick="toggleBiomeOverlays()" title="Toggle biome color overlays">🎨 Biomes</button>
                         </div>
                     </div>
@@ -3497,8 +3500,15 @@
         let mapCanvas = null;
         let mapCtx = null;
         const MAP_SQUARE_SIZE = 4; // Size of each square in pixels
-        const MAP_VIEWPORT_SIZE = 200; // Viewport shows 200x200 squares
         const MAP_GRID_SIZE = 1000; // Total grid size (1000x1000 squares)
+        
+        // Zoom levels: 'close' (20x20), 'medium' (100x100), 'full' (entire map)
+        let mapZoomLevel = 'medium'; // Default to medium view
+        const ZOOM_LEVELS = {
+            close: { size: 20, label: 'Close (20x20)' },
+            medium: { size: 100, label: 'Medium (100x100)' },
+            full: { size: 1000, label: 'Full Map' }
+        };
         
         // Map image
         let mapImage = null;
@@ -3652,62 +3662,88 @@
             mapCtx.fillStyle = '#0a0a0a';
             mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
             
-            // Draw entire map image scaled to fill canvas
-            if (mapImageLoaded && mapImage.complete && mapImage.width > 0 && mapImage.height > 0) {
-                try {
-                    // Draw the entire image scaled to fit the canvas while maintaining aspect ratio
+            // Get current zoom level viewport size
+            const viewportSize = ZOOM_LEVELS[mapZoomLevel].size;
+            
+            // Calculate viewport bounds based on zoom level
+            let startX, endX, startY, endY;
+            let drawX, drawY, drawWidth, drawHeight;
+            let gridScaleX, gridScaleY;
+            
+            if (mapZoomLevel === 'full') {
+                // Full map view - show entire map
+                startX = 0;
+                endX = MAP_GRID_SIZE;
+                startY = 0;
+                endY = MAP_GRID_SIZE;
+                
+                // Draw entire map image scaled to fit canvas
+                if (mapImageLoaded && mapImage.complete && mapImage.width > 0 && mapImage.height > 0) {
                     const imageAspect = mapImage.width / mapImage.height;
                     const canvasAspect = mapCanvas.width / mapCanvas.height;
                     
-                    let drawWidth, drawHeight, drawX, drawY;
-                    
                     if (imageAspect > canvasAspect) {
-                        // Image is wider - fit to width
                         drawWidth = mapCanvas.width;
                         drawHeight = mapCanvas.width / imageAspect;
                         drawX = 0;
                         drawY = (mapCanvas.height - drawHeight) / 2;
                     } else {
-                        // Image is taller - fit to height
                         drawWidth = mapCanvas.height * imageAspect;
                         drawHeight = mapCanvas.height;
                         drawX = (mapCanvas.width - drawWidth) / 2;
                         drawY = 0;
                     }
                     
-                    // Draw the entire image
                     mapCtx.drawImage(
                         mapImage,
                         0, 0, mapImage.width, mapImage.height,
                         drawX, drawY, drawWidth, drawHeight
                     );
                     
-                    // Calculate scale factors for grid positioning
-                    const gridScaleX = drawWidth / MAP_GRID_SIZE;
-                    const gridScaleY = drawHeight / MAP_GRID_SIZE;
-                    
-                    // Store scale for rendering grid elements
-                    window.mapGridScaleX = gridScaleX;
-                    window.mapGridScaleY = gridScaleY;
-                    window.mapDrawOffsetX = drawX;
-                    window.mapDrawOffsetY = drawY;
-                } catch (error) {
-                    console.error('Error drawing map image:', error);
+                    gridScaleX = drawWidth / MAP_GRID_SIZE;
+                    gridScaleY = drawHeight / MAP_GRID_SIZE;
                 }
             } else {
-                console.warn('Map image not ready:', { 
-                    loaded: mapImageLoaded, 
-                    complete: mapImage ? mapImage.complete : false,
-                    width: mapImage ? mapImage.width : 0,
-                    height: mapImage ? mapImage.height : 0
-                });
+                // Close or medium view - show area around player
+                const halfViewport = Math.floor(viewportSize / 2);
+                startX = Math.max(0, mapViewportX - halfViewport);
+                endX = Math.min(MAP_GRID_SIZE, mapViewportX + halfViewport);
+                startY = Math.max(0, mapViewportY - halfViewport);
+                endY = Math.min(MAP_GRID_SIZE, mapViewportY + halfViewport);
+                
+                // Draw portion of map image based on viewport
+                if (mapImageLoaded && mapImage.complete && mapImage.width > 0 && mapImage.height > 0) {
+                    const imageScaleX = mapImage.width / MAP_GRID_SIZE;
+                    const imageScaleY = mapImage.height / MAP_GRID_SIZE;
+                    const sourceX = startX * imageScaleX;
+                    const sourceY = startY * imageScaleY;
+                    const sourceWidth = (endX - startX) * imageScaleX;
+                    const sourceHeight = (endY - startY) * imageScaleY;
+                    
+                    // Draw to fill entire canvas
+                    drawX = 0;
+                    drawY = 0;
+                    drawWidth = mapCanvas.width;
+                    drawHeight = mapCanvas.height;
+                    
+                    mapCtx.drawImage(
+                        mapImage,
+                        sourceX, sourceY, sourceWidth, sourceHeight,
+                        drawX, drawY, drawWidth, drawHeight
+                    );
+                    
+                    gridScaleX = drawWidth / (endX - startX);
+                    gridScaleY = drawHeight / (endY - startY);
+                }
             }
             
-            // Calculate grid bounds for rendering overlays (entire map visible)
-            const startX = 0;
-            const endX = MAP_GRID_SIZE;
-            const startY = 0;
-            const endY = MAP_GRID_SIZE;
+            // Store scale for rendering markers
+            window.mapGridScaleX = gridScaleX || (mapCanvas.width / MAP_GRID_SIZE);
+            window.mapGridScaleY = gridScaleY || (mapCanvas.height / MAP_GRID_SIZE);
+            window.mapDrawOffsetX = drawX || 0;
+            window.mapDrawOffsetY = drawY || 0;
+            window.mapViewportStartX = startX;
+            window.mapViewportStartY = startY;
             
             // Get biome colors
             const biomeColors = {
@@ -3733,17 +3769,30 @@
             // Reset alpha
             mapCtx.globalAlpha = 1.0;
             
-            // Render towns (always visible, no fog of war)
+            // Render towns (only if within viewport)
             const towns = Array.from(engine.townSystem.towns.values());
             towns.forEach(town => {
-                // Calculate position on canvas using grid scale
-                const gridScaleX = window.mapGridScaleX || (mapCanvas.width / MAP_GRID_SIZE);
-                const gridScaleY = window.mapGridScaleY || (mapCanvas.height / MAP_GRID_SIZE);
-                const drawOffsetX = window.mapDrawOffsetX || 0;
-                const drawOffsetY = window.mapDrawOffsetY || 0;
+                // Check if town is within viewport
+                if (town.x < startX || town.x >= endX || town.y < startY || town.y >= endY) {
+                    return; // Skip towns outside viewport
+                }
                 
-                const screenX = drawOffsetX + (town.x * gridScaleX);
-                const screenY = drawOffsetY + (town.y * gridScaleY);
+                // Calculate position on canvas
+                const gridScaleX = window.mapGridScaleX;
+                const gridScaleY = window.mapGridScaleY;
+                const drawOffsetX = window.mapDrawOffsetX;
+                const drawOffsetY = window.mapDrawOffsetY;
+                const viewportStartX = window.mapViewportStartX;
+                const viewportStartY = window.mapViewportStartY;
+                
+                let screenX, screenY;
+                if (mapZoomLevel === 'full') {
+                    screenX = drawOffsetX + (town.x * gridScaleX);
+                    screenY = drawOffsetY + (town.y * gridScaleY);
+                } else {
+                    screenX = drawOffsetX + ((town.x - viewportStartX) * gridScaleX);
+                    screenY = drawOffsetY + ((town.y - viewportStartY) * gridScaleY);
+                }
                 
                 // Draw town marker (larger, more visible)
                 const markerSize = Math.max(8, gridScaleX * 2);
@@ -3794,14 +3843,23 @@
             }
             */
             
-            // Render player marker
-            const gridScaleX = window.mapGridScaleX || (mapCanvas.width / MAP_GRID_SIZE);
-            const gridScaleY = window.mapGridScaleY || (mapCanvas.height / MAP_GRID_SIZE);
-            const drawOffsetX = window.mapDrawOffsetX || 0;
-            const drawOffsetY = window.mapDrawOffsetY || 0;
+            // Render player marker (always centered in viewport for close/medium, positioned for full)
+            const gridScaleX = window.mapGridScaleX;
+            const gridScaleY = window.mapGridScaleY;
+            const drawOffsetX = window.mapDrawOffsetX;
+            const drawOffsetY = window.mapDrawOffsetY;
+            const viewportStartX = window.mapViewportStartX;
+            const viewportStartY = window.mapViewportStartY;
             
-            const playerScreenX = drawOffsetX + (playerPos.x * gridScaleX);
-            const playerScreenY = drawOffsetY + (playerPos.y * gridScaleY);
+            let playerScreenX, playerScreenY;
+            if (mapZoomLevel === 'full') {
+                playerScreenX = drawOffsetX + (playerPos.x * gridScaleX);
+                playerScreenY = drawOffsetY + (playerPos.y * gridScaleY);
+            } else {
+                // Center player in viewport for close/medium views
+                playerScreenX = mapCanvas.width / 2;
+                playerScreenY = mapCanvas.height / 2;
+            }
             
             // Draw player marker (larger, glowing red circle)
             const playerMarkerSize = Math.max(6, gridScaleX * 1.5);
@@ -4395,23 +4453,62 @@ Experience: ${enemy.exp}
             const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
             mapViewportX = playerPos.x;
             mapViewportY = playerPos.y;
-            renderMap();
+            
+            // For full map view, center doesn't change viewport, but update anyway
+            if (mapZoomLevel !== 'full') {
+                renderMap();
+            } else {
+                // For full map, just re-render to update player position
+                renderMap();
+            }
         }
 
-        function zoomMapIn() {
-            if (mapZoom < 4) {
-                mapZoom += 0.5;
+        function setMapZoomLevel(level) {
+            if (ZOOM_LEVELS[level]) {
+                mapZoomLevel = level;
+                // Center viewport on player when changing zoom
+                const engine = initializeGameEngine();
+                if (engine) {
+                    const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+                    mapViewportX = playerPos.x;
+                    mapViewportY = playerPos.y;
+                }
                 initializeMapRenderer();
                 renderMap();
+                updateZoomLevelButtons();
+            }
+        }
+        
+        function zoomMapIn() {
+            // Cycle through zoom levels: full -> medium -> close
+            if (mapZoomLevel === 'full') {
+                setMapZoomLevel('medium');
+            } else if (mapZoomLevel === 'medium') {
+                setMapZoomLevel('close');
             }
         }
 
         function zoomMapOut() {
-            if (mapZoom > 0.5) {
-                mapZoom -= 0.5;
-                initializeMapRenderer();
-                renderMap();
+            // Cycle through zoom levels: close -> medium -> full
+            if (mapZoomLevel === 'close') {
+                setMapZoomLevel('medium');
+            } else if (mapZoomLevel === 'medium') {
+                setMapZoomLevel('full');
             }
+        }
+        
+        function updateZoomLevelButtons() {
+            // Update button states to show current zoom level
+            const buttons = document.querySelectorAll('[data-zoom-level]');
+            buttons.forEach(btn => {
+                if (btn.dataset.zoomLevel === mapZoomLevel) {
+                    btn.style.background = '#8b4513';
+                    btn.style.color = '#fff';
+                } else {
+                    btn.style.background = '';
+                    btn.style.color = '';
+                }
+            });
         }
 
         function toggleBiomeOverlays() {
