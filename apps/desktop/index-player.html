@@ -3519,14 +3519,59 @@
                 mapImage = new Image();
                 mapImage.onload = function() {
                     mapImageLoaded = true;
-                    console.log('Map image loaded successfully');
-                    renderMap(); // Re-render when image loads
+                    console.log('Map image loaded successfully', mapImage.width, 'x', mapImage.height);
+                    // Re-render when image loads
+                    if (currentScreen === 'map') {
+                        renderMap();
+                    }
                 };
-                mapImage.onerror = function() {
-                    console.warn('Failed to load map image:', MAP_IMAGE_PATH);
+                mapImage.onerror = function(err) {
+                    console.error('Failed to load map image:', MAP_IMAGE_PATH, err);
+                    console.error('Trying alternative paths...');
                     mapImageLoaded = false;
+                    
+                    // Try alternative paths for Electron
+                    const alternativePaths = [
+                        './assets/map/world_map.png',
+                        '../assets/map/world_map.png',
+                        '../../assets/map/world_map.png',
+                        'file:///' + __dirname.replace(/\\/g, '/') + '/assets/map/world_map.png'
+                    ];
+                    
+                    let pathIndex = 0;
+                    const tryNextPath = () => {
+                        if (pathIndex < alternativePaths.length) {
+                            const altPath = alternativePaths[pathIndex];
+                            console.log('Trying alternative path:', altPath);
+                            const testImg = new Image();
+                            testImg.onload = function() {
+                                console.log('Successfully loaded from:', altPath);
+                                mapImage.src = altPath;
+                                mapImageLoaded = true;
+                                if (currentScreen === 'map') {
+                                    renderMap();
+                                }
+                            };
+                            testImg.onerror = function() {
+                                pathIndex++;
+                                tryNextPath();
+                            };
+                            testImg.src = altPath;
+                        } else {
+                            console.error('Could not load map image from any path');
+                        }
+                    };
+                    tryNextPath();
                 };
+                
+                // Try loading the image
+                console.log('Loading map image from:', MAP_IMAGE_PATH);
                 mapImage.src = MAP_IMAGE_PATH;
+            } else if (mapImage.complete && mapImageLoaded) {
+                // Image already loaded, just render
+                if (currentScreen === 'map') {
+                    renderMap();
+                }
             }
             
             // Add keyboard controls (only once)
@@ -3584,21 +3629,33 @@
             mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
             
             // Draw map image as background if loaded
-            if (mapImageLoaded && mapImage.complete) {
-                // Calculate the portion of the image to draw based on viewport
-                const imageScaleX = mapImage.width / MAP_GRID_SIZE;
-                const imageScaleY = mapImage.height / MAP_GRID_SIZE;
-                const sourceX = startX * imageScaleX;
-                const sourceY = startY * imageScaleY;
-                const sourceWidth = (endX - startX) * imageScaleX;
-                const sourceHeight = (endY - startY) * imageScaleY;
-                
-                // Draw the image portion to fill the canvas
-                mapCtx.drawImage(
-                    mapImage,
-                    sourceX, sourceY, sourceWidth, sourceHeight,
-                    0, 0, mapCanvas.width, mapCanvas.height
-                );
+            if (mapImageLoaded && mapImage.complete && mapImage.width > 0 && mapImage.height > 0) {
+                try {
+                    // Calculate the portion of the image to draw based on viewport
+                    const imageScaleX = mapImage.width / MAP_GRID_SIZE;
+                    const imageScaleY = mapImage.height / MAP_GRID_SIZE;
+                    const sourceX = startX * imageScaleX;
+                    const sourceY = startY * imageScaleY;
+                    const sourceWidth = (endX - startX) * imageScaleX;
+                    const sourceHeight = (endY - startY) * imageScaleY;
+                    
+                    // Draw the image portion to fill the canvas
+                    mapCtx.drawImage(
+                        mapImage,
+                        sourceX, sourceY, sourceWidth, sourceHeight,
+                        0, 0, mapCanvas.width, mapCanvas.height
+                    );
+                    console.log('Map image drawn:', { sourceX, sourceY, sourceWidth, sourceHeight, canvasWidth: mapCanvas.width, canvasHeight: mapCanvas.height });
+                } catch (error) {
+                    console.error('Error drawing map image:', error);
+                }
+            } else {
+                console.warn('Map image not ready:', { 
+                    loaded: mapImageLoaded, 
+                    complete: mapImage ? mapImage.complete : false,
+                    width: mapImage ? mapImage.width : 0,
+                    height: mapImage ? mapImage.height : 0
+                });
             }
             
             // Get biome colors
