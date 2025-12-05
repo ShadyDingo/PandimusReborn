@@ -3862,27 +3862,30 @@
                     screenY = townDrawOffsetY + ((town.y - townViewportStartY) * townGridScaleY);
                 }
                 
-                // Draw town marker (larger, more visible)
-                const markerSize = Math.max(8, townGridScaleX * 2);
+                // Draw town marker - 2x2 grid squares
+                // Calculate size based on grid scale (2 squares = 2 * gridScale)
+                const townMarkerSize = townGridScaleX * 2; // 2x2 grid squares
+                const townMarkerRadius = townMarkerSize / 2;
                 
                 // Draw outer glow
                 mapCtx.shadowColor = '#FFD700';
-                mapCtx.shadowBlur = 10;
+                mapCtx.shadowBlur = Math.max(2, townMarkerRadius * 0.3);
                 mapCtx.fillStyle = '#FFD700';
                 mapCtx.beginPath();
-                mapCtx.arc(screenX, screenY, markerSize, 0, Math.PI * 2);
+                mapCtx.arc(screenX, screenY, townMarkerRadius, 0, Math.PI * 2);
                 mapCtx.fill();
                 
                 // Draw inner circle
                 mapCtx.shadowBlur = 0;
                 mapCtx.fillStyle = '#8B4513';
                 mapCtx.beginPath();
-                mapCtx.arc(screenX, screenY, markerSize * 0.6, 0, Math.PI * 2);
+                mapCtx.arc(screenX, screenY, townMarkerRadius * 0.7, 0, Math.PI * 2);
                 mapCtx.fill();
                 
-                // Draw town icon (🏘️) or label
+                // Draw town icon (🏘️) - scaled to fit within marker
                 mapCtx.fillStyle = '#FFFFFF';
-                mapCtx.font = `${markerSize}px Arial`;
+                const iconSize = Math.max(8, townMarkerRadius * 0.8);
+                mapCtx.font = `${iconSize}px Arial`;
                 mapCtx.textAlign = 'center';
                 mapCtx.textBaseline = 'middle';
                 mapCtx.fillText('🏘️', screenX, screenY);
@@ -3927,22 +3930,24 @@
                 playerScreenY = mapCanvas.height / 2;
             }
             
-            // Draw player marker (larger, glowing red circle)
-            const playerMarkerSize = Math.max(6, playerGridScaleX * 1.5);
+            // Draw player marker - 1x1 grid square (fits within one square)
+            // Calculate size based on grid scale (1 square = 1 * gridScale)
+            const playerMarkerSize = playerGridScaleX; // 1x1 grid square
+            const playerMarkerRadius = playerMarkerSize / 2;
             
             // Draw outer glow
             mapCtx.shadowColor = '#FF0000';
-            mapCtx.shadowBlur = 15;
+            mapCtx.shadowBlur = Math.max(2, playerMarkerRadius * 0.3);
             mapCtx.fillStyle = '#FF0000';
             mapCtx.beginPath();
-            mapCtx.arc(playerScreenX, playerScreenY, playerMarkerSize, 0, Math.PI * 2);
+            mapCtx.arc(playerScreenX, playerScreenY, playerMarkerRadius, 0, Math.PI * 2);
             mapCtx.fill();
             
             // Draw inner circle
             mapCtx.shadowBlur = 0;
             mapCtx.fillStyle = '#FFFFFF';
             mapCtx.beginPath();
-            mapCtx.arc(playerScreenX, playerScreenY, playerMarkerSize * 0.7, 0, Math.PI * 2);
+            mapCtx.arc(playerScreenX, playerScreenY, playerMarkerRadius * 0.7, 0, Math.PI * 2);
             mapCtx.fill();
             
             // Update info display
