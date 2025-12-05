@@ -3772,6 +3772,7 @@
             mapCtx.globalAlpha = 1.0;
             
             // Render grid overlay if enabled
+            // Grid represents 1000x1000 squares across the entire map
             if (showGrid && mapImageLoaded && mapImage.complete) {
                 const gridScaleX = window.mapGridScaleX;
                 const gridScaleY = window.mapGridScaleY;
@@ -3781,18 +3782,25 @@
                 const viewportStartY = window.mapViewportStartY;
                 
                 // Calculate grid line spacing based on zoom level
-                // For close view, show every square; for medium, every 5; for full, every 25
+                // Show every square for close view, every 2 for medium, every 10 for full
+                // This gives smaller, more detailed grid squares
                 let gridSpacing = 1;
                 if (mapZoomLevel === 'medium') {
-                    gridSpacing = 5;
+                    gridSpacing = 2; // Show every 2 squares for medium view
                 } else if (mapZoomLevel === 'full') {
-                    gridSpacing = 25;
+                    gridSpacing = 10; // Show every 10 squares for full view (100 grid lines total)
                 }
                 
-                mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
                 mapCtx.lineWidth = 0.5;
                 
-                // Draw vertical grid lines
+                // Calculate canvas drawing bounds
+                const canvasStartX = drawOffsetX;
+                const canvasEndX = mapZoomLevel === 'full' ? (drawOffsetX + (mapCanvas.width - drawOffsetX * 2)) : mapCanvas.width;
+                const canvasStartY = drawOffsetY;
+                const canvasEndY = mapZoomLevel === 'full' ? (drawOffsetY + (mapCanvas.height - drawOffsetY * 2)) : mapCanvas.height;
+                
+                // Draw vertical grid lines (every gridSpacing squares)
                 for (let x = startX; x <= endX; x += gridSpacing) {
                     let screenX;
                     if (mapZoomLevel === 'full') {
@@ -3802,15 +3810,15 @@
                     }
                     
                     // Only draw if within canvas bounds
-                    if (screenX >= drawOffsetX && screenX <= (drawOffsetX + (mapZoomLevel === 'full' ? (mapCanvas.width - drawOffsetX * 2) : mapCanvas.width))) {
+                    if (screenX >= canvasStartX && screenX <= canvasEndX) {
                         mapCtx.beginPath();
-                        mapCtx.moveTo(screenX, drawOffsetY);
-                        mapCtx.lineTo(screenX, drawOffsetY + (mapZoomLevel === 'full' ? (mapCanvas.height - drawOffsetY * 2) : mapCanvas.height));
+                        mapCtx.moveTo(screenX, canvasStartY);
+                        mapCtx.lineTo(screenX, canvasEndY);
                         mapCtx.stroke();
                     }
                 }
                 
-                // Draw horizontal grid lines
+                // Draw horizontal grid lines (every gridSpacing squares)
                 for (let y = startY; y <= endY; y += gridSpacing) {
                     let screenY;
                     if (mapZoomLevel === 'full') {
@@ -3820,10 +3828,10 @@
                     }
                     
                     // Only draw if within canvas bounds
-                    if (screenY >= drawOffsetY && screenY <= (drawOffsetY + (mapZoomLevel === 'full' ? (mapCanvas.height - drawOffsetY * 2) : mapCanvas.height))) {
+                    if (screenY >= canvasStartY && screenY <= canvasEndY) {
                         mapCtx.beginPath();
-                        mapCtx.moveTo(drawOffsetX, screenY);
-                        mapCtx.lineTo(drawOffsetX + (mapZoomLevel === 'full' ? (mapCanvas.width - drawOffsetX * 2) : mapCanvas.width), screenY);
+                        mapCtx.moveTo(canvasStartX, screenY);
+                        mapCtx.lineTo(canvasEndX, screenY);
                         mapCtx.stroke();
                     }
                 }
