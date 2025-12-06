@@ -14,7 +14,7 @@ export class GameEngine {
         
         this.gameState = {
             player: null,
-            mapPosition: { x: 500, y: 500 }, // Starting position (starting town)
+            mapPosition: { x: 250, y: 250 }, // Starting position (starting town)
             lastTown: "starting_town", // Respawn location
             discoveredTowns: ["starting_town"],
             exploredSquares: new Set(), // Fog of war - explored grid coordinates
@@ -99,7 +99,7 @@ export class GameEngine {
         });
 
         // Initialize map position at starting town
-        this.gameState.mapPosition = { x: 500, y: 500 };
+        this.gameState.mapPosition = { x: 250, y: 250 };
         this.gameState.lastTown = "starting_town";
         this.gameState.discoveredTowns = ["starting_town"];
         
@@ -117,7 +117,7 @@ export class GameEngine {
         }
         
         // Use the async version to prevent UI freezing
-        const result = await this.mapGenerator.generateMapAsync(this.mapSystem, 500, 500, progressCallback);
+        const result = await this.mapGenerator.generateMapAsync(this.mapSystem, 250, 250, progressCallback);
         
         // Register all towns
         result.towns.forEach(town => {
@@ -181,9 +181,6 @@ export class GameEngine {
 
     // Move player on the map
     movePlayer(direction) {
-        // Check and reset daily travel points if needed
-        this.checkDailyTravelReset();
-        
         const currentPos = this.gameState.mapPosition;
         const moveResult = this.mapSystem.canMove(currentPos.x, currentPos.y, direction);
         
@@ -198,32 +195,6 @@ export class GameEngine {
                 success: false, 
                 message: `This area requires level ${levelReq}. You are level ${this.gameState.player.level}.` 
             };
-        }
-        
-        // Calculate movement cost
-        const movementCost = this.calculateMovementCost(moveResult.x, moveResult.y);
-        
-        // Ensure travel points are not negative (fix any corruption)
-        if (this.gameState.dailyTravelPoints < 0) {
-            this.gameState.dailyTravelPoints = 0;
-        }
-        
-        // Check if player has enough travel points
-        const roundedTravelPoints = Math.round(this.gameState.dailyTravelPoints);
-        const roundedCost = Math.round(movementCost);
-        if (roundedTravelPoints < roundedCost) {
-            return {
-                success: false,
-                message: `Not enough travel points! You need ${roundedCost} points but only have ${roundedTravelPoints}. Travel points reset daily.`
-            };
-        }
-        
-        // Consume travel points (only if we have enough)
-        this.gameState.dailyTravelPoints = Math.round(this.gameState.dailyTravelPoints - movementCost);
-        
-        // Ensure points never go below 0 (safety check)
-        if (this.gameState.dailyTravelPoints < 0) {
-            this.gameState.dailyTravelPoints = 0;
         }
         
         // Update position
@@ -241,9 +212,7 @@ export class GameEngine {
             success: true, 
             position: this.gameState.mapPosition,
             isTown: !!town,
-            town: town,
-            travelPointsRemaining: this.gameState.dailyTravelPoints,
-            movementCost: movementCost
+            town: town
         };
     }
 
@@ -383,12 +352,69 @@ export class GameEngine {
                 this.gameState.player.experience = (this.gameState.player.experience || 0) + (enemy.exp || 10);
             }
             
+            // Process loot drops
+            const droppedItems = [];
+            if (enemy.lootTable) {
+                // Common items (70% chance)
+                if (Math.random() < 0.7 && enemy.lootTable.common) {
+                    const commonItems = Object.keys(enemy.lootTable.common);
+                    const commonWeights = Object.values(enemy.lootTable.common);
+                    const totalWeight = commonWeights.reduce((sum, w) => sum + w, 0);
+                    let random = Math.random() * totalWeight;
+                    
+                    for (let i = 0; i < commonItems.length; i++) {
+                        random -= commonWeights[i];
+                        if (random <= 0) {
+                            droppedItems.push({ id: commonItems[i], rarity: 'common' });
+                            break;
+                        }
+                    }
+                }
+                
+                // Uncommon items (25% chance)
+                if (Math.random() < 0.25 && enemy.lootTable.uncommon) {
+                    const uncommonItems = Object.keys(enemy.lootTable.uncommon);
+                    const uncommonWeights = Object.values(enemy.lootTable.uncommon);
+                    const totalWeight = uncommonWeights.reduce((sum, w) => sum + w, 0);
+                    if (totalWeight > 0) {
+                        let random = Math.random() * totalWeight;
+                        
+                        for (let i = 0; i < uncommonItems.length; i++) {
+                            random -= uncommonWeights[i];
+                            if (random <= 0) {
+                                droppedItems.push({ id: uncommonItems[i], rarity: 'uncommon' });
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Rare items (5% chance)
+                if (Math.random() < 0.05 && enemy.lootTable.rare) {
+                    const rareItems = Object.keys(enemy.lootTable.rare);
+                    const rareWeights = Object.values(enemy.lootTable.rare);
+                    const totalWeight = rareWeights.reduce((sum, w) => sum + w, 0);
+                    if (totalWeight > 0) {
+                        let random = Math.random() * totalWeight;
+                        
+                        for (let i = 0; i < rareItems.length; i++) {
+                            random -= rareWeights[i];
+                            if (random <= 0) {
+                                droppedItems.push({ id: rareItems[i], rarity: 'rare' });
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
             this.currentCombatContext = null;
             
             return {
                 success: true,
                 gold: goldReward,
-                exp: enemy.exp || 10
+                exp: enemy.exp || 10,
+                droppedItems: droppedItems
             };
         }
         
@@ -504,7 +530,7 @@ export class GameEngine {
     }
 
     // Calculate movement cost for a square
-    calculateMovementCost(x, y, startingTownX = 500, startingTownY = 500) {
+    calculateMovementCost(x, y, startingTownX = 250, startingTownY = 250) {
         const baseCost = 1;
         
         // Distance multiplier: 1 + (distanceFromStart / 1000) * 0.5 (max 1.5x)
@@ -893,7 +919,7 @@ export class GameEngine {
             
             // Ensure map position exists (migration from old saves)
             if (!this.gameState.mapPosition) {
-                this.gameState.mapPosition = { x: 500, y: 500 };
+                this.gameState.mapPosition = { x: 250, y: 250 };
             }
             
             // Ensure discovered towns exists

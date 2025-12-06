@@ -448,7 +448,21 @@ export const GameData = {
                 name: "Plains", 
                 color: "#90EE90", 
                 difficulty: 1,
-                enemy: "wild_boar",
+                enemy: "wild_boar", // Legacy support
+                enemySpawnTable: [
+                    // Easy enemies (60% total weight)
+                    { id: "wild_boar", weight: 25, tier: "easy" },
+                    { id: "plains_rabbit", weight: 20, tier: "easy" },
+                    { id: "field_mouse", weight: 15, tier: "easy" },
+                    // Moderate enemies (30% total weight)
+                    { id: "plains_wolf", weight: 18, tier: "moderate" },
+                    { id: "bandit_scout", weight: 12, tier: "moderate" },
+                    // Mid-level enemies (8% total weight)
+                    { id: "plains_stalker", weight: 5, tier: "mid" },
+                    { id: "nomad_warrior", weight: 3, tier: "mid" },
+                    // Apex enemy (2% weight - very rare)
+                    { id: "plains_tyrant", weight: 2, tier: "apex" }
+                ],
                 resource: "wheat",
                 spawnChance: 0.8
             },
@@ -634,7 +648,117 @@ export const GameData = {
             ap: 8,
             armor: 2,
             gold: [5, 15],
-            exp: 10
+            exp: 10,
+            lootTable: {
+                common: { "wheat": 70, "leather": 25 },
+                uncommon: { "iron_ore": 5 },
+                rare: {}
+            }
+        },
+        plains_rabbit: {
+            name: "Plains Rabbit",
+            level: 1,
+            hp: 30,
+            maxHp: 30,
+            ap: 5,
+            armor: 0,
+            gold: [3, 10],
+            exp: 5,
+            lootTable: {
+                common: { "wheat": 80, "fur": 15 },
+                uncommon: {},
+                rare: {}
+            }
+        },
+        field_mouse: {
+            name: "Field Mouse",
+            level: 1,
+            hp: 20,
+            maxHp: 20,
+            ap: 3,
+            armor: 0,
+            gold: [2, 8],
+            exp: 3,
+            lootTable: {
+                common: { "wheat": 90 },
+                uncommon: {},
+                rare: {}
+            }
+        },
+        plains_wolf: {
+            name: "Plains Wolf",
+            level: 2,
+            hp: 80,
+            maxHp: 80,
+            ap: 12,
+            armor: 3,
+            gold: [15, 30],
+            exp: 20,
+            lootTable: {
+                common: { "leather": 60, "fur": 30 },
+                uncommon: { "iron_ore": 8 },
+                rare: {}
+            }
+        },
+        bandit_scout: {
+            name: "Bandit Scout",
+            level: 2,
+            hp: 70,
+            maxHp: 70,
+            ap: 15,
+            armor: 5,
+            gold: [12, 25],
+            exp: 18,
+            lootTable: {
+                common: { "leather": 50, "iron_ore": 35 },
+                uncommon: { "wheat": 12 },
+                rare: {}
+            }
+        },
+        plains_stalker: {
+            name: "Plains Stalker",
+            level: 4,
+            hp: 120,
+            maxHp: 120,
+            ap: 20,
+            armor: 8,
+            gold: [30, 60],
+            exp: 40,
+            lootTable: {
+                common: { "leather": 45, "iron_ore": 40 },
+                uncommon: { "fur": 12 },
+                rare: { "wheat": 3 }
+            }
+        },
+        nomad_warrior: {
+            name: "Nomad Warrior",
+            level: 5,
+            hp: 150,
+            maxHp: 150,
+            ap: 25,
+            armor: 12,
+            gold: [40, 70],
+            exp: 50,
+            lootTable: {
+                common: { "iron_ore": 50, "leather": 35 },
+                uncommon: { "fur": 12 },
+                rare: { "wheat": 3 }
+            }
+        },
+        plains_tyrant: {
+            name: "Plains Tyrant",
+            level: 8,
+            hp: 400,
+            maxHp: 400,
+            ap: 50,
+            armor: 25,
+            gold: [100, 200],
+            exp: 150,
+            lootTable: {
+                common: { "iron_ore": 40, "leather": 35 },
+                uncommon: { "fur": 20 },
+                rare: { "wheat": 5 }
+            }
         },
         bandit_cutpurse: {
             name: "Bandit Cutpurse",
@@ -818,6 +942,20 @@ export const GameData = {
             rarity: "common",
             baseValue: 8,
             refinement: "iron_ingot"
+        },
+        leather: {
+            name: "Leather",
+            type: "hide",
+            rarity: "common",
+            baseValue: 5,
+            refinement: null
+        },
+        fur: {
+            name: "Fur",
+            type: "hide",
+            rarity: "common",
+            baseValue: 3,
+            refinement: null
         },
         bog_moss: {
             name: "Bog Moss",

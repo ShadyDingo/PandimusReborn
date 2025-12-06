@@ -129,7 +129,7 @@ export class MapGenerator {
     }
 
     // Simplified image-based map generation (for use with world_map.png)
-    async generateImageBasedMapAsync(mapSystem, startingTownX = 500, startingTownY = 500, progressCallback = null) {
+    async generateImageBasedMapAsync(mapSystem, startingTownX = 250, startingTownY = 250, progressCallback = null) {
         if (progressCallback) progressCallback('Initializing map grid...');
         
         const yieldToBrowser = () => new Promise(resolve => setTimeout(resolve, 0));
@@ -156,19 +156,23 @@ export class MapGenerator {
         // Generate squares in chunks - optimized for speed
         // Only create squares as needed (lazy initialization)
         // For image-based map, we can create a minimal grid and expand as needed
+        const MAP_GRID_SIZE = 500; // 500x500 grid
         let processed = 0;
-        const total = 1000 * 1000;
+        const total = MAP_GRID_SIZE * MAP_GRID_SIZE;
         const CHUNK_SIZE = 50000; // Process 50,000 squares per chunk for much faster generation
         
         // Create a simple default biome for all squares (can be refined later based on image analysis)
         const defaultBiome = 'plains';
         
-        for (let x = 0; x < 1000; x++) {
-            for (let y = 0; y < 1000; y++) {
+        // Max distance from center (250,250) to corner (0,0) or (500,500)
+        const maxDistance = Math.sqrt(Math.pow(MAP_GRID_SIZE / 2, 2) + Math.pow(MAP_GRID_SIZE / 2, 2));
+        
+        for (let x = 0; x < MAP_GRID_SIZE; x++) {
+            for (let y = 0; y < MAP_GRID_SIZE; y++) {
                 // Simple biome assignment - for image-based map, biome is less critical
                 // Players will see the actual map image, biome is mainly for game mechanics
-                const distanceFromCenter = Math.sqrt(Math.pow(x - 500, 2) + Math.pow(y - 500, 2));
-                const normalizedDistance = distanceFromCenter / 707;
+                const distanceFromCenter = Math.sqrt(Math.pow(x - startingTownX, 2) + Math.pow(y - startingTownY, 2));
+                const normalizedDistance = distanceFromCenter / maxDistance;
                 
                 // Assign biome based on simple logic (minimal computation)
                 let biome = defaultBiome;
@@ -243,7 +247,7 @@ export class MapGenerator {
 
     // Async version that yields to browser to prevent UI freezing
     // Now uses image-based generation instead of procedural
-    async generateMapAsync(mapSystem, startingTownX = 500, startingTownY = 500, progressCallback = null) {
+    async generateMapAsync(mapSystem, startingTownX = 250, startingTownY = 250, progressCallback = null) {
         // Use image-based generation instead of procedural
         return await this.generateImageBasedMapAsync(mapSystem, startingTownX, startingTownY, progressCallback);
     }
@@ -1032,15 +1036,17 @@ export class MapGenerator {
     // Spawn enemies in a square based on biome and location
     spawnEnemies(mapSystem, x, y, squareData, startingTownX, startingTownY, towns) {
         const biomeData = GameData.map.biomes[squareData.biome];
-        if (!biomeData || !biomeData.enemy) return;
+        if (!biomeData) return;
         
-        const enemyId = biomeData.enemy;
-        const enemyData = GameData.enemies[enemyId];
-        if (!enemyData) return;
+        // Check if biome has enemy spawn table (new system) or single enemy (legacy)
+        const spawnTable = biomeData.enemySpawnTable;
+        const legacyEnemyId = biomeData.enemy;
+        
+        if (!spawnTable && !legacyEnemyId) return;
         
         const distanceFromStart = mapSystem.getDistance(x, y, startingTownX, startingTownY);
-        const distanceFactor = Math.min(distanceFromStart / 1000, 1);
-        const difficultyFactor = squareData.levelRequirement / 100;
+        const distanceFactor = Math.min(distanceFromStart / 500, 1); // Normalize to 500x500 map
+        const difficultyFactor = Math.min(squareData.levelRequirement / 10, 1); // Normalize difficulty
         
         const baseChance = biomeData.spawnChance || 0.5;
         const spawnChance = baseChance * (1 - distanceFactor * 0.4) * (1 - difficultyFactor * 0.3);
@@ -1055,9 +1061,61 @@ export class MapGenerator {
         }
         
         for (let i = 0; i < enemyCount; i++) {
+            let selectedEnemyId = null;
+            
+            // Use spawn table if available, otherwise use legacy single enemy
+            if (spawnTable && spawnTable.length > 0) {
+                // Filter enemies based on distance and difficulty
+                const availableEnemies = spawnTable.filter(entry => {
+                    const enemyData = GameData.enemies[entry.id];
+                    if (!enemyData) return false;
+                    
+                    // Easy enemies: spawn more near starting town (low distance, low difficulty)
+                    if (entry.tier === "easy") {
+                        return distanceFactor < 0.4 && difficultyFactor < 0.3;
+                    }
+                    // Moderate enemies: spawn at medium distance/difficulty
+                    else if (entry.tier === "moderate") {
+                        return distanceFactor >= 0.2 && distanceFactor < 0.7 && difficultyFactor < 0.5;
+                    }
+                    // Mid-level enemies: spawn at higher distance/difficulty
+                    else if (entry.tier === "mid") {
+                        return distanceFactor >= 0.4 && difficultyFactor >= 0.3;
+                    }
+                    // Apex enemy: very rare, only at high distance/difficulty
+                    else if (entry.tier === "apex") {
+                        return distanceFactor >= 0.6 && difficultyFactor >= 0.5 && this.rng() < 0.05; // 5% chance even if conditions met
+                    }
+                    return true;
+                });
+                
+                if (availableEnemies.length > 0) {
+                    // Calculate total weight
+                    const totalWeight = availableEnemies.reduce((sum, entry) => sum + entry.weight, 0);
+                    let random = this.rng() * totalWeight;
+                    
+                    // Select enemy based on weight
+                    for (const entry of availableEnemies) {
+                        random -= entry.weight;
+                        if (random <= 0) {
+                            selectedEnemyId = entry.id;
+                            break;
+                        }
+                    }
+                }
+            } else if (legacyEnemyId) {
+                // Legacy: use single enemy
+                selectedEnemyId = legacyEnemyId;
+            }
+            
+            if (!selectedEnemyId) continue;
+            
+            const enemyData = GameData.enemies[selectedEnemyId];
+            if (!enemyData) continue;
+            
             const enemy = {
-                id: `${enemyId}_${x}_${y}_${i}_${Date.now()}`,
-                enemyId: enemyId,
+                id: `${selectedEnemyId}_${x}_${y}_${i}_${Date.now()}`,
+                enemyId: selectedEnemyId,
                 name: enemyData.name,
                 level: enemyData.level,
                 hp: enemyData.hp || enemyData.maxHp,
@@ -1066,6 +1124,7 @@ export class MapGenerator {
                 armor: enemyData.armor || 0,
                 gold: enemyData.gold || [10, 20],
                 exp: enemyData.exp || 10,
+                lootTable: enemyData.lootTable || null,
                 spawnedAt: Date.now()
             };
             

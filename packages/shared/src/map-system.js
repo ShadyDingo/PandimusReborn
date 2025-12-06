@@ -1,4 +1,4 @@
-// Grid-based map system for 1000x1000 world
+// Grid-based map system for 500x500 world
 export class MapSystem {
     constructor() {
         this.MAP_SIZE = 1000;
@@ -60,7 +60,7 @@ export class MapSystem {
     }
 
     // Get zone difficulty based on distance from starting town
-    calculateZoneDifficulty(x, y, startingTownX = 500, startingTownY = 500) {
+    calculateZoneDifficulty(x, y, startingTownX = 250, startingTownY = 250) {
         const distance = this.getDistance(x, y, startingTownX, startingTownY);
         // Base difficulty increases with distance
         // Every 50 units of distance = +1 level requirement

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+WORKS CU<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1206,25 +1206,43 @@
         /* Map Screen Styles */
         .map-viewport-container {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             gap: 1rem;
             margin: 2rem 0;
+            height: calc(100vh - 300px);
+            min-height: 500px;
         }
 
         .map-controls {
             display: flex;
+            flex-direction: column;
             gap: 1rem;
-            align-items: center;
-            flex-wrap: wrap;
             padding: 1rem;
             background: linear-gradient(180deg, #d4c5a9 0%, #c4b599 100%);
             border: 2px solid #8b7355;
             border-radius: 8px;
+            width: 220px;
+            min-width: 220px;
+            max-width: 220px;
+            overflow-y: auto;
+        }
+        
+        .map-location-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            padding: 1rem;
+            background: linear-gradient(180deg, #d4c5a9 0%, #c4b599 100%);
+            border: 2px solid #8b7355;
+            border-radius: 8px;
+            width: 300px;
+            min-width: 300px;
+            max-width: 300px;
+            overflow-y: auto;
         }
 
         .map-info {
-            flex: 1;
-            min-width: 200px;
+            width: 100%;
         }
 
         .map-info-item {
@@ -1240,8 +1258,11 @@
         .movement-controls {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
             gap: 0.5rem;
-            max-width: 200px;
+            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 1;
         }
 
         .movement-controls button {
@@ -1265,20 +1286,24 @@
             cursor: not-allowed;
         }
 
-        .movement-controls button:nth-child(2) {
+        .movement-controls button:nth-child(1) {
             grid-column: 2;
+            grid-row: 1;
+        }
+
+        .movement-controls button:nth-child(2) {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .movement-controls button:nth-child(3) {
+            grid-column: 2;
+            grid-row: 3;
         }
 
         .movement-controls button:nth-child(4) {
-            grid-column: 1;
-        }
-
-        .movement-controls button:nth-child(5) {
             grid-column: 3;
-        }
-
-        .movement-controls button:nth-child(6) {
-            grid-column: 2;
+            grid-row: 2;
         }
 
         .map-grid-container {
@@ -1287,10 +1312,45 @@
             border: 3px solid #8b7355;
             border-radius: 8px;
             overflow: hidden;
-            width: 100%;
-            height: 100%;
-            min-height: 400px;
+            flex: 1;
+            min-width: 0;
+            min-height: 500px;
             box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .map-legend {
+            padding: 0.75rem;
+            background: linear-gradient(180deg, #d4c5a9 0%, #c4b599 100%);
+            border: 2px solid #8b7355;
+            border-radius: 8px;
+            font-size: 0.75rem;
+        }
+        
+        .map-legend h4 {
+            color: #8b4513;
+            margin: 0 0 0.5rem 0;
+            font-size: 0.9rem;
+        }
+        
+        .map-legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 0.25rem;
+        }
+        
+        .map-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .map-legend-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 1px solid #666;
+            vertical-align: middle;
+            flex-shrink: 0;
         }
         
         #map-canvas {
@@ -1306,6 +1366,12 @@
             border: 2px solid #8b7355;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-top: 1rem;
+        }
+        
+        #map-content {
+            display: flex;
+            flex-direction: column;
         }
 
         .biome-panel-header {
@@ -1663,11 +1729,6 @@
         </div>
         
         <div class="nav-section">
-            <div class="nav-section-title">Combat</div>
-            <button onclick="showEncounters()" id="nav-encounters">Encounters</button>
-        </div>
-        
-        <div class="nav-section">
             <div class="nav-section-title">Trade</div>
             <button onclick="showShops()" id="nav-shops">Shops</button>
         </div>
@@ -1699,10 +1760,6 @@
                 <div class="feature" onclick="showInventory()">
                     <h3>Inventory</h3>
                     <p>Manage your equipment and items to optimize your character's combat effectiveness.</p>
-                </div>
-                <div class="feature" onclick="showEncounters()">
-                    <h3>Encounters</h3>
-                    <p>Face various creatures and challenges as you explore the world of Pandimus.</p>
                 </div>
                 <div class="feature" onclick="showShops()">
                     <h3>Shops</h3>
@@ -2284,37 +2341,20 @@
 
             <div id="map-content">
                 <div class="map-viewport-container">
-                    <!-- Map Controls and Info -->
+                    <!-- Left Sidebar: Map Controls -->
                     <div class="map-controls">
-                        <div class="map-info">
-                            <div class="map-info-item">
-                                <strong>Travel Points:</strong> <span id="map-travel-points">10 / 10</span>
-                            </div>
-                            <div class="map-info-item">
-                                <strong>Position:</strong> <span id="map-player-position">X: 500, Y: 500</span>
-                            </div>
-                            <div class="map-info-item">
-                                <strong>Biome:</strong> <span id="map-current-biome">-</span>
-                            </div>
-                            <div class="map-info-item">
-                                <strong>Zone:</strong> <span id="map-current-zone">-</span>
-                            </div>
-                            <div class="map-info-item">
-                                <strong>Level Req:</strong> <span id="map-level-req">1</span>
-                            </div>
-                            <div class="map-info-item">
+                        <div style="margin-top: 0;">
+                            <h3 style="color: #8b4513; margin: 0 0 0.75rem 0; text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5); font-size: 1rem;">Movement</h3>
+                            <div class="movement-controls">
+                                <button onclick="moveOnMap('up')" title="Move Up (W)">↑</button>
+                                <button onclick="moveOnMap('left')" title="Move Left (A)">←</button>
+                                <button onclick="moveOnMap('down')" title="Move Down (S)">↓</button>
+                                <button onclick="moveOnMap('right')" title="Move Right (D)">→</button>
                             </div>
                         </div>
-                        <div class="movement-controls">
-                            <button onclick="moveOnMap('up')" title="Move Up (W)">↑</button>
-                            <button onclick="moveOnMap('up')" style="display: none;"></button>
-                            <button onclick="moveOnMap('left')" title="Move Left (A)">←</button>
-                            <button onclick="moveOnMap('down')" title="Move Down (S)">↓</button>
-                            <button onclick="moveOnMap('right')" title="Move Right (D)">→</button>
-                            <button onclick="moveOnMap('down')" style="display: none;"></button>
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <button class="btn btn-secondary" onclick="centerMapOnPlayer()" title="Center map on player">📍 Center</button>
+                        
+                        <div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                            <h3 style="color: #8b4513; margin: 0 0 0.75rem 0; text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5); font-size: 1rem;">Map Controls</h3>
                             <button class="btn btn-secondary" onclick="zoomMapIn()" title="Zoom in">🔍+</button>
                             <button class="btn btn-secondary" onclick="zoomMapOut()" title="Zoom out">🔍-</button>
                             <button class="btn btn-secondary" data-zoom-level="close" onclick="setMapZoomLevel('close')" title="Close view (20x20)">🔍 Close</button>
@@ -2325,13 +2365,52 @@
                         </div>
                     </div>
 
-                    <!-- Map Grid Container -->
-                    <div class="map-grid-container" id="map-grid-container">
-                        <canvas id="map-canvas" style="display: block; cursor: crosshair;"></canvas>
+                    <!-- Center: Map Grid Container -->
+                    <div style="display: flex; flex-direction: column; flex: 1; gap: 1rem; min-width: 0;">
+                        <div class="map-grid-container" id="map-grid-container">
+                            <canvas id="map-canvas" style="display: block; cursor: crosshair;"></canvas>
+                        </div>
+                        
+                        <!-- Map Legend (below map) -->
+                        <div class="map-legend">
+                            <h4>Map Legend</h4>
+                            <div class="map-legend-grid">
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #90EE90;"></span> Plains</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #228B22;"></span> Forest</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #EDC9AF;"></span> Desert</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #808080;"></span> Mountains</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #2F4F2F;"></span> Swamp</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #4682B4;"></span> Coast</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #8B0000;"></span> Volcanic</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #E0E0E0;"></span> Tundra</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #FFD700; border: 2px solid #8B4513;"></span> Town</div>
+                                <div class="map-legend-item"><span class="map-legend-color" style="background: #FF0000; border: 2px solid #FFF;"></span> Player</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Biome Square Information Panel -->
-                    <div id="biome-square-panel" class="biome-square-panel" style="display: none; margin-top: 1rem;">
+                    <!-- Right Sidebar: Location Info -->
+                    <div class="map-location-info">
+                        <div class="map-info">
+                            <h3 style="color: #8b4513; margin: 0 0 0.75rem 0; text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5); font-size: 1rem;">Location Info</h3>
+                            <div class="map-info-item">
+                                <strong>Position:</strong> <span id="map-player-position">X: 250, Y: 250</span>
+                            </div>
+                            <div class="map-info-item">
+                                <strong>Biome:</strong> <span id="map-current-biome">-</span>
+                            </div>
+                            <div class="map-info-item">
+                                <strong>Zone:</strong> <span id="map-current-zone">-</span>
+                            </div>
+                            <div class="map-info-item">
+                                <strong>Level Req:</strong> <span id="map-level-req">1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Biome Square Information Panel -->
+                <div id="biome-square-panel" class="biome-square-panel" style="display: none; margin-top: 1rem;">
                         <div class="biome-panel-header">
                             <h3 style="color: #8b4513; margin: 0;">Current Location</h3>
                         </div>
@@ -2363,25 +2442,6 @@
                         </div>
                     </div>
 
-                    <!-- Map Legend -->
-                    <div class="map-legend" style="margin-top: 1rem; padding: 1rem; background: linear-gradient(180deg, #d4c5a9 0%, #c4b599 100%); border: 2px solid #8b7355; border-radius: 8px;">
-                        <h4 style="color: #8b4513; margin-bottom: 0.5rem;">Map Legend</h4>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.5rem; font-size: 0.85rem;">
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #90EE90; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Plains</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #228B22; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Forest</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #EDC9AF; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Desert</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #808080; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Mountains</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #2F4F2F; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Swamp</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #4682B4; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Coast</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #8B0000; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Volcanic</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #E0E0E0; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Tundra</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #2F4F2F; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Jungle</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #CD853F; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Canyon</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #FFD700; border: 2px solid #8B4513; vertical-align: middle; margin-right: 0.5rem;"></span> Town</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #FF0000; border: 2px solid #FFF; vertical-align: middle; margin-right: 0.5rem;"></span> Player</div>
-                            <div><span style="display: inline-block; width: 16px; height: 16px; background: #333; border: 1px solid #666; vertical-align: middle; margin-right: 0.5rem;"></span> Unexplored</div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -2698,7 +2758,16 @@
                     try {
                         const data = JSON.parse(savedData);
                         if (data.mapPosition) {
-                            window.gameEngine.gameState.mapPosition = data.mapPosition;
+                            // If player is at old center (500,500) or outside bounds, move to new center (250,250)
+                            const pos = data.mapPosition;
+                            if ((pos.x === 500 && pos.y === 500) || pos.x >= 500 || pos.y >= 500) {
+                                window.gameEngine.gameState.mapPosition = { x: 250, y: 250 };
+                            } else {
+                                window.gameEngine.gameState.mapPosition = data.mapPosition;
+                            }
+                        } else {
+                            // Default to center if no position saved
+                            window.gameEngine.gameState.mapPosition = { x: 250, y: 250 };
                         }
                         // Fog of war removed - no need to load explored squares
                         if (data.discoveredTowns) {
@@ -2707,16 +2776,7 @@
                         if (data.player) {
                             window.gameEngine.gameState.player = data.player;
                         }
-                        // Load travel points state
-                        if (data.dailyTravelPoints !== undefined) {
-                            window.gameEngine.gameState.dailyTravelPoints = data.dailyTravelPoints;
-                        }
-                        if (data.maxDailyTravelPoints !== undefined) {
-                            window.gameEngine.gameState.maxDailyTravelPoints = data.maxDailyTravelPoints;
-                        }
-                        if (data.lastTravelReset !== undefined) {
-                            window.gameEngine.gameState.lastTravelReset = data.lastTravelReset;
-                        }
+                        // Travel points removed - no longer loading
                     } catch (e) {
                         console.error('Error loading game state:', e);
                     }
@@ -3446,9 +3506,7 @@
                 'character': 'nav-character',
                 'map': 'nav-map',
                 'inventory': 'nav-inventory',
-                'encounters': 'nav-encounters',
-                'shops': 'nav-shops',
-                'combat': 'nav-encounters' // Combat screen uses encounters nav button
+                'shops': 'nav-shops'
             };
             
             if (navButtonMap[screenId]) {
@@ -3496,12 +3554,12 @@
 
         // Map rendering system
         let mapZoom = 1;
-        let mapViewportX = 500;
-        let mapViewportY = 500;
+        let mapViewportX = 250;
+        let mapViewportY = 250;
         let mapCanvas = null;
         let mapCtx = null;
         const MAP_SQUARE_SIZE = 4; // Size of each square in pixels
-        const MAP_GRID_SIZE = 1000; // Total grid size (1000x1000 squares)
+        const MAP_GRID_SIZE = 500; // Total grid size (500x500 squares)
         
         // Zoom levels: 'close' (20x20), 'medium' (100x100), 'full' (entire map)
         let mapZoomLevel = 'medium'; // Default to medium view
@@ -3652,10 +3710,10 @@
             const engine = initializeGameEngine();
             if (!engine) return;
             
-            const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+            const playerPos = engine.gameState.mapPosition || { x: 250, y: 250 };
             
             // Center viewport on player if not manually moved
-            if (mapViewportX === 500 && mapViewportY === 500) {
+            if (mapViewportX === 250 && mapViewportY === 250) {
                 mapViewportX = playerPos.x;
                 mapViewportY = playerPos.y;
             }
@@ -3702,8 +3760,13 @@
                         drawX, drawY, drawWidth, drawHeight
                     );
                     
-                    gridScaleX = drawWidth / MAP_GRID_SIZE;
-                    gridScaleY = drawHeight / MAP_GRID_SIZE;
+                    // Calculate uniform grid scale to ensure squares are always square
+                    const fullScaleX = drawWidth / MAP_GRID_SIZE;
+                    const fullScaleY = drawHeight / MAP_GRID_SIZE;
+                    const uniformFullScale = Math.min(fullScaleX, fullScaleY);
+                    
+                    gridScaleX = uniformFullScale;
+                    gridScaleY = uniformFullScale;
                 }
             } else {
                 // Close or medium view - show area around player
@@ -3722,28 +3785,51 @@
                     const sourceWidth = (endX - startX) * imageScaleX;
                     const sourceHeight = (endY - startY) * imageScaleY;
                     
-                    // Draw to fill entire canvas
-                    drawX = 0;
-                    drawY = 0;
-                    drawWidth = mapCanvas.width;
-                    drawHeight = mapCanvas.height;
+                    // Calculate uniform grid scale to ensure squares are always square
+                    // Use the minimum scale to maintain square aspect ratio
+                    const viewportWidth = endX - startX;
+                    const viewportHeight = endY - startY;
+                    const scaleX = mapCanvas.width / viewportWidth;
+                    const scaleY = mapCanvas.height / viewportHeight;
+                    const uniformScale = Math.min(scaleX, scaleY);
                     
+                    // Calculate drawing dimensions that maintain square grid cells
+                    drawWidth = viewportWidth * uniformScale;
+                    drawHeight = viewportHeight * uniformScale;
+                    
+                    // Center the map image within the canvas
+                    drawX = (mapCanvas.width - drawWidth) / 2;
+                    drawY = (mapCanvas.height - drawHeight) / 2;
+                    
+                    // Draw the map image with the calculated dimensions and offsets
                     mapCtx.drawImage(
                         mapImage,
                         sourceX, sourceY, sourceWidth, sourceHeight,
                         drawX, drawY, drawWidth, drawHeight
                     );
                     
-                    gridScaleX = drawWidth / (endX - startX);
-                    gridScaleY = drawHeight / (endY - startY);
+                    // Set uniform grid scale
+                    gridScaleX = uniformScale;
+                    gridScaleY = uniformScale;
                 }
             }
             
             // Store scale for rendering markers
-            window.mapGridScaleX = gridScaleX || (mapCanvas.width / MAP_GRID_SIZE);
-            window.mapGridScaleY = gridScaleY || (mapCanvas.height / MAP_GRID_SIZE);
+            // For full map, calculate uniform scale if not already set
+            if (!gridScaleX || !gridScaleY) {
+                const fullScaleX = mapCanvas.width / MAP_GRID_SIZE;
+                const fullScaleY = mapCanvas.height / MAP_GRID_SIZE;
+                const uniformFullScale = Math.min(fullScaleX, fullScaleY);
+                gridScaleX = uniformFullScale;
+                gridScaleY = uniformFullScale;
+            }
+            
+            window.mapGridScaleX = gridScaleX;
+            window.mapGridScaleY = gridScaleY;
             window.mapDrawOffsetX = drawX || 0;
             window.mapDrawOffsetY = drawY || 0;
+            window.mapDrawWidth = drawWidth || mapCanvas.width;
+            window.mapDrawHeight = drawHeight || mapCanvas.height;
             window.mapViewportStartX = startX;
             window.mapViewportStartY = startY;
             
@@ -3772,7 +3858,7 @@
             mapCtx.globalAlpha = 1.0;
             
             // Render grid overlay if enabled
-            // Grid represents 1000x1000 squares across the entire map
+            // Grid represents 500x500 squares across the entire map
             if (showGrid && mapImageLoaded && mapImage.complete) {
                 const gridScaleX = window.mapGridScaleX;
                 const gridScaleY = window.mapGridScaleY;
@@ -3795,10 +3881,11 @@
                 mapCtx.lineWidth = 0.5;
                 
                 // Calculate canvas drawing bounds
+                // Use the actual drawing area (centered) for all zoom levels
                 const canvasStartX = drawOffsetX;
-                const canvasEndX = mapZoomLevel === 'full' ? (drawOffsetX + (mapCanvas.width - drawOffsetX * 2)) : mapCanvas.width;
+                const canvasEndX = drawOffsetX + window.mapDrawWidth;
                 const canvasStartY = drawOffsetY;
-                const canvasEndY = mapZoomLevel === 'full' ? (drawOffsetY + (mapCanvas.height - drawOffsetY * 2)) : mapCanvas.height;
+                const canvasEndY = drawOffsetY + window.mapDrawHeight;
                 
                 // Draw vertical grid lines (every gridSpacing squares)
                 for (let x = startX; x <= endX; x += gridSpacing) {
@@ -3954,48 +4041,347 @@
             updateMapInfo();
         }
 
-        function updateMapInfo() {
+        // Track squares currently being processed to prevent infinite recursion
+        const processingSquares = new Set();
+        
+        // Check if a square is near ocean (within 2 squares) for coast detection
+        // This function does NOT trigger biome updates to avoid recursion
+        function checkIfNearOcean(x, y, maxDistance = 2, skipUpdates = true) {
             const engine = initializeGameEngine();
-            if (!engine) return;
+            if (!engine) return false;
             
-            // Check and reset daily travel points
-            engine.checkDailyTravelReset();
+            // Check adjacent squares for ocean (Manhattan distance of 1-2)
+            for (let dx = -maxDistance; dx <= maxDistance; dx++) {
+                for (let dy = -maxDistance; dy <= maxDistance; dy++) {
+                    // Skip the center square itself
+                    if (dx === 0 && dy === 0) continue;
+                    
+                    // Check bounds
+                    const checkX = x + dx;
+                    const checkY = y + dy;
+                    if (checkX < 0 || checkX >= MAP_GRID_SIZE || checkY < 0 || checkY >= MAP_GRID_SIZE) {
+                        continue;
+                    }
+                    
+                    // Calculate Manhattan distance (only check squares 1-2 away)
+                    const distance = Math.abs(dx) + Math.abs(dy);
+                    if (distance > maxDistance) continue;
+                    
+                    // Only update biome if not skipping updates and not already processing
+                    if (!skipUpdates && mapImageLoaded && mapImage && mapImage.complete) {
+                        const neighborKey = `${checkX},${checkY}`;
+                        if (!processingSquares.has(neighborKey)) {
+                            updateSquareBiomeFromImage(checkX, checkY);
+                        }
+                    }
+                    
+                    // Check existing biome data (don't trigger updates)
+                    const neighborSquare = engine.mapSystem.getSquare(checkX, checkY);
+                    if (neighborSquare && neighborSquare.biome === 'ocean') {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        // Detect biome from map image pixel color
+        // Check most specific biomes first, then general ones
+        function detectBiomeFromMapImage(x, y) {
+            if (!mapImageLoaded || !mapImage || !mapImage.complete) {
+                return 'plains'; // Default if image not loaded
+            }
             
-            // Update travel points calculation with current skills from gameData
-            if (typeof gameData !== 'undefined' && gameData.skills) {
-                const maxPoints = engine.calculateMaxDailyTravelPoints(gameData.skills);
-                const roundedMaxPoints = Math.round(maxPoints);
-                const currentMax = Math.round(engine.gameState.maxDailyTravelPoints || 10);
-                if (currentMax !== roundedMaxPoints) {
-                    engine.gameState.maxDailyTravelPoints = roundedMaxPoints;
-                    // If max increased, add the difference
-                    const difference = roundedMaxPoints - currentMax;
-                    if (difference > 0) {
-                        engine.gameState.dailyTravelPoints = Math.round(Math.min(
-                            (engine.gameState.dailyTravelPoints || 10) + difference,
-                            roundedMaxPoints
-                        ));
+            // Create a temporary canvas to sample a small area (3x3) for better accuracy
+            const sampleSize = 3;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = sampleSize;
+            tempCanvas.height = sampleSize;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // Calculate pixel position in the map image
+            const imageScaleX = mapImage.width / MAP_GRID_SIZE;
+            const imageScaleY = mapImage.height / MAP_GRID_SIZE;
+            const pixelX = Math.floor(x * imageScaleX);
+            const pixelY = Math.floor(y * imageScaleY);
+            
+            // Draw a small area to sample
+            tempCtx.drawImage(
+                mapImage,
+                pixelX - 1, pixelY - 1, sampleSize, sampleSize,
+                0, 0, sampleSize, sampleSize
+            );
+            
+            // Get the pixel color data from center pixel
+            const imageData = tempCtx.getImageData(1, 1, 1, 1);
+            const [r, g, b] = imageData.data;
+            const brightness = (r + g + b) / 3;
+            const saturation = Math.max(r, g, b) - Math.min(r, g, b);
+            
+            // Check for water/ocean FIRST (most specific)
+            // Deep ocean: Very dark blue (low brightness, high blue dominance)
+            // Be more strict about ocean detection - must be clearly water
+            if (b > 90 && b > r + 30 && b > g + 30) {
+                // Very dark blue = deep ocean
+                if (brightness < 90 || (b > 130 && r < 70 && g < 90 && brightness < 110)) {
+                    return 'ocean';
+                }
+                // Medium dark blue = ocean (but not too bright)
+                if (brightness < 120 && b > 110) {
+                    return 'ocean';
+                }
+            }
+            
+            // River/Lake: Medium to light blue/teal (but not ocean)
+            if (b > 100 && b > r + 25 && b > g + 25 && brightness >= 90 && brightness < 180) {
+                // Check if it's a lighter blue (river) vs darker (lake)
+                if (brightness > 130 && b > 130) {
+                    return 'river';
+                } else if (brightness > 110 && b > 110) {
+                    return 'lake';
+                } else if (brightness < 120) {
+                    // Still dark enough to be ocean
+                    return 'ocean';
+                }
+            }
+            
+            // Coast: Only if adjacent to ocean (check neighbors first)
+            // Coast should be a thin strip along ocean edges, not deep inland
+            // Pass skipUpdates=true to prevent recursion
+            const isNearOcean = checkIfNearOcean(x, y, 2, true);
+            if (isNearOcean && b > 70 && g > 70 && r < 140 && brightness > 100 && brightness < 200) {
+                // Check if blue and green are both significant (water mixed with land)
+                if (Math.abs(b - g) < 40 && b > 80 && g > 80) {
+                    return 'coast';
+                }
+            }
+            
+            // Tundra: Very light grey/white (high brightness, low saturation)
+            if (brightness > 200 && saturation < 40 && Math.abs(r - g) < 30 && Math.abs(g - b) < 30) {
+                return 'tundra';
+            }
+            
+            // Mountains: Light to medium grey (medium brightness, low saturation)
+            if (brightness > 120 && brightness < 220 && saturation < 50) {
+                // Check if it's grey (similar RGB values)
+                if (Math.abs(r - g) < 40 && Math.abs(g - b) < 40 && Math.abs(r - b) < 40) {
+                    if (brightness > 180) {
+                        return 'tundra'; // Very light grey = snow/tundra
+                    } else {
+                        return 'mountain'; // Medium grey = mountains
                     }
                 }
             }
             
-            const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+            // Volcanic: Red/brown/dark colors (high red, low green/blue)
+            if (r > 100 && r > g + 40 && r > b + 40 && brightness < 150) {
+                return 'volcanic';
+            }
+            
+            // Desert: Yellow/orange/tan (high red and green, low blue, high brightness)
+            if (r > 180 && g > 150 && b < 140 && (r + g) > (b * 2.2) && brightness > 150) {
+                if (r > 220 && g > 200 && b < 120) {
+                    return 'desert'; // Bright yellow/tan
+                } else if (r > 200 && g > 150 && b < 130) {
+                    return 'canyon'; // Orange/brown
+                }
+            }
+            
+            // Forest: Dark to medium green (high green, low red/blue)
+            if (g > 80 && g > r + 25 && g > b + 25) {
+                if (g > 140 && r < 100 && b < 100 && brightness < 150) {
+                    return 'forest'; // Dark green
+                } else if (g > 120 && brightness < 180) {
+                    if (brightness < 120) {
+                        return 'swamp'; // Darker, muddier green
+                    } else {
+                        return 'jungle'; // Medium green
+                    }
+                }
+            }
+            
+            // Plains: Light green/yellow-green (balanced, not too dark, not water)
+            // Only if it's not water, not mountain, not desert, etc.
+            if (g > 80 && (r + g) > (b * 1.3) && brightness > 100 && brightness < 220) {
+                // Make sure it's not too blue (water) or too grey (mountain)
+                if (b < g - 20 && saturation > 30) {
+                    return 'plains';
+                }
+            }
+            
+            // Default fallback - check brightness to guess
+            if (brightness < 100) {
+                return 'ocean'; // Very dark = likely ocean
+            } else if (brightness > 200) {
+                return 'tundra'; // Very light = likely snow/tundra
+            } else if (brightness > 150) {
+                return 'plains'; // Medium-light = likely plains
+            } else {
+                return 'mountain'; // Medium-dark = likely mountain
+            }
+        }
+        
+        // Update biome for a square based on map image
+        function updateSquareBiomeFromImage(x, y) {
+            const engine = initializeGameEngine();
+            if (!engine) return;
+            
+            // Prevent infinite recursion
+            const squareKey = `${x},${y}`;
+            if (processingSquares.has(squareKey)) {
+                return; // Already processing this square, skip to avoid recursion
+            }
+            
+            processingSquares.add(squareKey);
+            
+            try {
+                const square = engine.mapSystem.getSquare(x, y);
+                if (!square) {
+                    processingSquares.delete(squareKey);
+                    return;
+                }
+                
+                const detectedBiome = detectBiomeFromMapImage(x, y);
+                if (detectedBiome !== square.biome) {
+                    square.biome = detectedBiome;
+                    square.zone = engine.mapGenerator ? engine.mapGenerator.getZoneName(detectedBiome, square.levelRequirement) : detectedBiome;
+                    
+                    // Update entities if biome changed significantly
+                    if ((square.biome === 'ocean' && detectedBiome !== 'ocean') || 
+                    (square.biome !== 'ocean' && detectedBiome === 'ocean')) {
+                        // Clear entities if switching to/from ocean
+                        square.entities.enemies = [];
+                        square.entities.items = [];
+                    }
+                }
+            } finally {
+                // Always remove from processing set, even if error occurs
+                processingSquares.delete(squareKey);
+            }
+        }
+        
+        // Find the nearest traversable (non-ocean) square from a given position
+        function findNearestTraversableSquare(startX, startY, maxRadius = 50) {
+            const engine = initializeGameEngine();
+            if (!engine) return null;
+            
+            // Update biome for starting position first
+            if (mapImageLoaded && mapImage && mapImage.complete) {
+                updateSquareBiomeFromImage(startX, startY);
+            }
+            
+            const startSquare = engine.mapSystem.getSquare(startX, startY);
+            if (startSquare && startSquare.biome !== 'ocean' && engine.mapSystem.isTraversable(startX, startY)) {
+                return { x: startX, y: startY }; // Already on traversable square
+            }
+            
+            // Search in expanding circles for the nearest traversable square
+            for (let radius = 1; radius <= maxRadius; radius++) {
+                const candidates = [];
+                
+                // Check all squares at this radius
+                for (let dx = -radius; dx <= radius; dx++) {
+                    for (let dy = -radius; dy <= radius; dy++) {
+                        // Only check squares on the edge of this radius
+                        if (Math.abs(dx) === radius || Math.abs(dy) === radius) {
+                            const x = startX + dx;
+                            const y = startY + dy;
+                            
+                            // Check bounds
+                            if (x < 0 || x >= MAP_GRID_SIZE || y < 0 || y >= MAP_GRID_SIZE) {
+                                continue;
+                            }
+                            
+                            // Update biome from image
+                            if (mapImageLoaded && mapImage && mapImage.complete) {
+                                updateSquareBiomeFromImage(x, y);
+                            }
+                            
+                            const square = engine.mapSystem.getSquare(x, y);
+                            if (square && square.biome !== 'ocean' && engine.mapSystem.isTraversable(x, y)) {
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                candidates.push({ x, y, distance });
+                            }
+                        }
+                    }
+                }
+                
+                // If we found candidates, return the closest one
+                if (candidates.length > 0) {
+                    candidates.sort((a, b) => a.distance - b.distance);
+                    return { x: candidates[0].x, y: candidates[0].y };
+                }
+            }
+            
+            // If no traversable square found, default to starting town
+            return { x: 250, y: 250 };
+        }
+        
+        // Check if player is in ocean and move them to nearest traversable square
+        function ensurePlayerNotInOcean() {
+            const engine = initializeGameEngine();
+            if (!engine || !engine.gameState.mapPosition) return;
+            
+            const pos = engine.gameState.mapPosition;
+            
+            // Update biome for current position and surrounding squares
+            if (mapImageLoaded && mapImage && mapImage.complete) {
+                updateSquareBiomeFromImage(pos.x, pos.y);
+                // Also check adjacent squares to ensure accurate detection
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        if (dx === 0 && dy === 0) continue;
+                        const checkX = pos.x + dx;
+                        const checkY = pos.y + dy;
+                        if (checkX >= 0 && checkX < MAP_GRID_SIZE && checkY >= 0 && checkY < MAP_GRID_SIZE) {
+                            updateSquareBiomeFromImage(checkX, checkY);
+                        }
+                    }
+                }
+            }
+            
+            const square = engine.getCurrentSquare();
+            // Check both biome and traversability
+            if (square && (square.biome === 'ocean' || !engine.mapSystem.isTraversable(pos.x, pos.y))) {
+                // Player is in ocean or non-traversable square, find nearest traversable square
+                const newPos = findNearestTraversableSquare(pos.x, pos.y);
+                if (newPos && (newPos.x !== pos.x || newPos.y !== pos.y)) {
+                    console.log(`Player was in ocean/non-traversable at (${pos.x}, ${pos.y}), moving to nearest traversable square (${newPos.x}, ${newPos.y})`);
+                    engine.gameState.mapPosition = { x: newPos.x, y: newPos.y };
+                    
+                    // Update viewport
+                    mapViewportX = newPos.x;
+                    mapViewportY = newPos.y;
+                    
+                    // Re-render map
+                    renderMap();
+                    
+                    // Update map info
+                    updateMapInfo();
+                    
+                    // Show message
+                    showTemporaryMessage('You were moved to the nearest safe location!', 'info');
+                }
+            }
+        }
+
+        function updateMapInfo() {
+            const engine = initializeGameEngine();
+            if (!engine) return;
+            
+            // Check if player is in ocean and move them if needed
+            ensurePlayerNotInOcean();
+            
+            const playerPos = engine.gameState.mapPosition || { x: 250, y: 250 };
             const square = engine.getCurrentSquare();
             
-            // Update travel points display
-            const travelPointsEl = document.getElementById('map-travel-points');
-            if (travelPointsEl) {
-                // Ensure we're reading the most up-to-date values and rounding to integers
-                const current = Math.round(engine.gameState.dailyTravelPoints || 10);
-                const max = Math.round(engine.gameState.maxDailyTravelPoints || 10);
-                travelPointsEl.textContent = `${current} / ${max}`;
-                // Color code based on remaining points
-                if (current < max * 0.2) {
-                    travelPointsEl.style.color = '#e53e3e'; // Red
-                } else if (current < max * 0.5) {
-                    travelPointsEl.style.color = '#dd6b20'; // Orange
-                } else {
-                    travelPointsEl.style.color = '#38a169'; // Green
+            // Update biome from map image if available
+            if (mapImageLoaded && mapImage && mapImage.complete) {
+                updateSquareBiomeFromImage(playerPos.x, playerPos.y);
+                // Re-fetch square after update
+                const updatedSquare = engine.getCurrentSquare();
+                if (updatedSquare) {
+                    Object.assign(square, updatedSquare);
                 }
             }
             
@@ -4022,6 +4408,13 @@
             const levelReqEl = document.getElementById('map-level-req');
             if (levelReqEl && square) {
                 levelReqEl.textContent = square.levelRequirement || 1;
+            }
+            
+            // Show/hide Shops button based on whether player is in a town
+            const shopsButton = document.getElementById('nav-shops');
+            if (shopsButton && square) {
+                const isInTown = square.isTown || false;
+                shopsButton.style.display = isInTown ? 'block' : 'none';
             }
             
             // Update exploration percentage
@@ -4076,8 +4469,8 @@
             }
             
             // Update biome stats
-            const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
-            const distanceFromStart = engine.mapSystem.getDistance(playerPos.x, playerPos.y, 500, 500);
+            const playerPos = engine.gameState.mapPosition || { x: 250, y: 250 };
+            const distanceFromStart = engine.mapSystem.getDistance(playerPos.x, playerPos.y, 250, 250);
             
             const zoneDiffEl = document.getElementById('biome-zone-difficulty');
             if (zoneDiffEl) {
@@ -4246,6 +4639,9 @@ Experience: ${enemy.exp}
                 alert('Player data not found!');
                 return;
             }
+            
+            // Stop passive regeneration during combat
+            stopPassiveRegeneration();
             
             // Initialize combat state
             combatState = {
@@ -4429,14 +4825,52 @@ Experience: ${enemy.exp}
                 addCombatLog(`Victory! Gained ${result.gold} gold and ${result.exp} experience!`);
                 
                 // Update player stats
-                if (player) {
+                if (player && combatState) {
                     player.experience = (player.experience || 0) + result.exp;
-                    player.hp = Math.min(player.maxHp, player.hp); // Keep current HP
+                    // Sync HP from combatState to player
+                    player.hp = Math.min(player.maxHp, Math.round(combatState.player.hp * 10) / 10);
                 }
                 
                 // Update currency
                 if (gameData.currency) {
                     gameData.currency.gold = (gameData.currency.gold || 0) + result.gold;
+                }
+                
+                // Process loot drops
+                if (result.droppedItems && result.droppedItems.length > 0) {
+                    result.droppedItems.forEach(droppedItem => {
+                        // Get resource data from GameData
+                        const resourceData = window.GameData && window.GameData.resources && window.GameData.resources[droppedItem.id];
+                        if (resourceData) {
+                            // Create resource item for inventory
+                            const resourceItem = {
+                                id: `${droppedItem.id}_${Date.now()}_${Math.random()}`,
+                                resourceId: droppedItem.id,
+                                name: resourceData.name || droppedItem.id,
+                                type: resourceData.type || 'plant',
+                                rarity: droppedItem.rarity,
+                                value: resourceData.baseValue || 1,
+                                description: resourceData.description || ''
+                            };
+                            
+                            gameData.inventory.push(resourceItem);
+                            addCombatLog(`Found ${resourceItem.name} (${droppedItem.rarity})!`);
+                        } else {
+                            // If resource not found, still add it as a basic item
+                            const resourceItem = {
+                                id: `${droppedItem.id}_${Date.now()}_${Math.random()}`,
+                                resourceId: droppedItem.id,
+                                name: droppedItem.id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                                type: 'plant',
+                                rarity: droppedItem.rarity,
+                                value: 1
+                            };
+                            
+                            gameData.inventory.push(resourceItem);
+                            addCombatLog(`Found ${resourceItem.name} (${droppedItem.rarity})!`);
+                        }
+                    });
+                    updateInventoryDisplay();
                 }
                 
                 updateCurrencyDisplay();
@@ -4446,6 +4880,8 @@ Experience: ${enemy.exp}
             // Return to map after a delay
             setTimeout(() => {
                 combatState = null;
+                // Restart passive regeneration after combat
+                startPassiveRegeneration();
                 showMap();
                 updateBiomeSquarePanel();
             }, 2000);
@@ -4472,6 +4908,8 @@ Experience: ${enemy.exp}
             // Return to map after a delay
             setTimeout(() => {
                 combatState = null;
+                // Restart passive regeneration after combat
+                startPassiveRegeneration();
                 showMap();
                 updateBiomeSquarePanel();
             }, 2000);
@@ -4484,9 +4922,43 @@ Experience: ${enemy.exp}
                 return;
             }
             
+            // Check if destination would be ocean before moving
+            const currentPos = engine.gameState.mapPosition;
+            let newX = currentPos.x;
+            let newY = currentPos.y;
+            
+            switch(direction.toLowerCase()) {
+                case 'up':
+                case 'w':
+                    newY = currentPos.y - 1;
+                    break;
+                case 'down':
+                case 's':
+                    newY = currentPos.y + 1;
+                    break;
+                case 'left':
+                case 'a':
+                    newX = currentPos.x - 1;
+                    break;
+                case 'right':
+                case 'd':
+                    newX = currentPos.x + 1;
+                    break;
+            }
+            
+            // Update biome for destination before checking if traversable
+            if (mapImageLoaded && mapImage && mapImage.complete) {
+                updateSquareBiomeFromImage(newX, newY);
+            }
+            
             const result = engine.movePlayer(direction);
             
             if (result.success) {
+                // Update biome for new position
+                if (mapImageLoaded && mapImage && mapImage.complete) {
+                    updateSquareBiomeFromImage(result.position.x, result.position.y);
+                }
+                
                 // Update viewport to follow player
                 mapViewportX = result.position.x;
                 mapViewportY = result.position.y;
@@ -4497,7 +4969,7 @@ Experience: ${enemy.exp}
                 // Re-render map
                 renderMap();
                 
-                // Update map info (including travel points)
+                // Update map info
                 updateMapInfo();
                 
                 // Save game state
@@ -4510,9 +4982,15 @@ Experience: ${enemy.exp}
             } else {
                 // Show error message
                 if (result.message) {
-                    alert(result.message);
+                    // Check if it's an ocean blocking movement
+                    const destSquare = engine.mapSystem.getSquare(newX, newY);
+                    if (destSquare && destSquare.biome === 'ocean') {
+                        alert('Cannot move into the ocean!');
+                    } else {
+                        alert(result.message);
+                    }
                 }
-                // Still update map info to refresh travel points display
+                // Still update map info
                 updateMapInfo();
             }
         }
@@ -4521,7 +4999,7 @@ Experience: ${enemy.exp}
             const engine = initializeGameEngine();
             if (!engine) return;
             
-            const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+            const playerPos = engine.gameState.mapPosition || { x: 250, y: 250 };
             mapViewportX = playerPos.x;
             mapViewportY = playerPos.y;
             
@@ -4540,7 +5018,7 @@ Experience: ${enemy.exp}
                 // Center viewport on player when changing zoom
                 const engine = initializeGameEngine();
                 if (engine) {
-                    const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+                    const playerPos = engine.gameState.mapPosition || { x: 250, y: 250 };
                     mapViewportX = playerPos.x;
                     mapViewportY = playerPos.y;
                 }
@@ -4608,7 +5086,7 @@ Experience: ${enemy.exp}
             
             // Update gameData with map state
             if (!gameData.mapPosition) {
-                gameData.mapPosition = { x: 500, y: 500 };
+                gameData.mapPosition = { x: 250, y: 250 };
             }
             gameData.mapPosition = engine.gameState.mapPosition;
             
@@ -4617,10 +5095,7 @@ Experience: ${enemy.exp}
             // Save discovered towns
             gameData.discoveredTowns = engine.gameState.discoveredTowns || ['starting_town'];
             
-            // Save travel points state
-            gameData.dailyTravelPoints = engine.gameState.dailyTravelPoints;
-            gameData.maxDailyTravelPoints = engine.gameState.maxDailyTravelPoints;
-            gameData.lastTravelReset = engine.gameState.lastTravelReset;
+            // Travel points removed - no longer saving
             
             // Save to localStorage
             saveGameData();
@@ -4635,6 +5110,11 @@ Experience: ${enemy.exp}
                 console.warn('GameEngine not available - map features may be limited');
                 return;
             }
+            
+            // Check if player is in ocean and move them if needed (after a short delay to ensure map is loaded)
+            setTimeout(() => {
+                ensurePlayerNotInOcean();
+            }, 200);
             
             // Initialize map renderer (will resize canvas to container)
             setTimeout(() => {
@@ -4662,8 +5142,12 @@ Experience: ${enemy.exp}
                 }).then(() => {
                     console.log('Map generation completed successfully');
                     hideMapLoadingIndicator();
+                    
+                    // Check if player is in ocean and move them if needed
+                    ensurePlayerNotInOcean();
+                    
                     // Center viewport on player
-                    const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+                    const playerPos = engine.gameState.mapPosition || { x: 250, y: 250 };
                     mapViewportX = playerPos.x;
                     mapViewportY = playerPos.y;
                     
@@ -4680,7 +5164,12 @@ Experience: ${enemy.exp}
                 });
             } else {
                 // Map already generated, just render it
-                const playerPos = engine.gameState.mapPosition || { x: 500, y: 500 };
+                // Check if player is in ocean and move them if needed
+                setTimeout(() => {
+                    ensurePlayerNotInOcean();
+                }, 150);
+                
+                const playerPos = engine.gameState.mapPosition || { x: 250, y: 250 };
                 mapViewportX = playerPos.x;
                 mapViewportY = playerPos.y;
                 
@@ -4960,25 +5449,63 @@ Experience: ${enemy.exp}
             updateShopsDisplay();
         }
 
-        function showEncounters() {
-            if (!currentLocation) {
-                alert("Please select a location from the map first!");
-                showMap();
-                return;
-            }
-            showScreen('combat'); // Encounters shows the combat screen
-            
-            // Idle combat disabled - always show normal combat controls
-            // Ensure idle combat is stopped if it was somehow active
-            if (gameData.idleCombat.isActive) {
-                gameData.idleCombat.isActive = false;
-                gameData.idleCombat.location = null;
-                gameData.idleCombat.startTime = null;
+        // showEncounters function removed - Combat/Encounters not hooked up with current map system
+
+        // Passive HP Regeneration System
+        let passiveRegenInterval = null;
+        
+        function startPassiveRegeneration() {
+            // Clear any existing interval
+            if (passiveRegenInterval) {
+                clearInterval(passiveRegenInterval);
             }
             
-            document.getElementById('idle-combat-info').style.display = 'none';
-            document.getElementById('normal-combat-controls').style.display = 'block';
-            startNewCombat(); // Start normal combat
+            // Run every 2.5 seconds (2500ms)
+            passiveRegenInterval = setInterval(() => {
+                // Only regenerate if player exists and not in combat
+                if (!player || combatState !== null) {
+                    return;
+                }
+                
+                // Check if player has max HP already
+                if (player.hp >= player.maxHp) {
+                    return;
+                }
+                
+                // Calculate regeneration rate: 0.1 + (Vitality * 0.01) HP per second
+                const vitality = player.attributes?.Vitality || 0;
+                const regenPerSecond = 0.1 + (vitality * 0.01);
+                
+                // Regenerate over 2.5 seconds: regenPerSecond * 2.5
+                const regenAmount = regenPerSecond * 2.5;
+                
+                // Apply regeneration
+                const oldHp = player.hp;
+                player.hp = Math.min(player.maxHp, Math.round((player.hp + regenAmount) * 10) / 10);
+                
+                // Update display if HP changed
+                if (player.hp > oldHp) {
+                    updateCharacterDisplay();
+                    
+                    // Also update engine's player HP if it exists
+                    const engine = initializeGameEngine();
+                    if (engine && engine.gameState.player) {
+                        engine.gameState.player.hp = player.hp;
+                    }
+                    
+                    // Save game data periodically (every 5 ticks = ~12.5 seconds)
+                    if (Math.random() < 0.2) {
+                        saveGameData();
+                    }
+                }
+            }, 2500); // 2.5 seconds
+        }
+        
+        function stopPassiveRegeneration() {
+            if (passiveRegenInterval) {
+                clearInterval(passiveRegenInterval);
+                passiveRegenInterval = null;
+            }
         }
 
         // Character persistence
@@ -5035,6 +5562,9 @@ Experience: ${enemy.exp}
                     
                     // Recalculate health with current equipment and skills
                     recalculateHealth();
+                    
+                    // Start passive HP regeneration
+                    startPassiveRegeneration();
                     
                     console.log("Game data loaded from localStorage:", player);
                     return true;
@@ -5217,6 +5747,9 @@ Experience: ${enemy.exp}
             updateCharacterDisplay();
             updateToggleButtons();
             updateCurrencyDisplay();
+            
+            // Start passive HP regeneration
+            startPassiveRegeneration();
             
             alert(`Welcome, ${name}! Character created successfully!`);
         }
@@ -5892,6 +6425,8 @@ Experience: ${enemy.exp}
             gameData.idleCombat.startTime = null;
             
             combatState = null;
+            // Restart passive regeneration after combat
+            startPassiveRegeneration();
             battleTurnCount = 0; // Reset turn counter
             updateCombatDisplay();
             
@@ -7061,6 +7596,10 @@ Experience: ${enemy.exp}
                 const firstAidHealing = Math.round(combatStatsAfterAction.firstAidValue * 10) / 10;
                 if (firstAidHealing > 0) {
                     combatState.player.hp = Math.round((Math.min(combatState.player.maxHp, combatState.player.hp + firstAidHealing)) * 10) / 10;
+                    // Sync HP back to player object
+                    if (player) {
+                        player.hp = combatState.player.hp;
+                    }
                     addCombatLog(`First Aid restores ${firstAidHealing.toFixed(1)} HP!`);
                 }
             }
@@ -7144,6 +7683,8 @@ Experience: ${enemy.exp}
                 player.hp = Math.round(player.maxHp * 10) / 10;
                 
                 combatState = null;
+                // Restart passive regeneration after combat
+                startPassiveRegeneration();
                 updateCombatDisplay();
                 updateCurrencyDisplay();
                 saveGameData();
@@ -7233,7 +7774,13 @@ Experience: ${enemy.exp}
                 // Enemy wins stalemate
                 addCombatLog("The stalemate breaks against you! Defeat!");
                 combatState.player.hp = 0.0;
+                // Sync HP from combatState to player
+                if (player) {
+                    player.hp = 0.0;
+                }
                 combatState = null;
+                // Restart passive regeneration after combat
+                startPassiveRegeneration();
                 updateCombatDisplay();
                 addCombatLog("You have been defeated! Returning to map...");
                 setTimeout(() => {
@@ -7374,6 +7921,11 @@ Experience: ${enemy.exp}
                 addCombatLog("No attribute/skill changes applied (all locked)");
             }
             
+            // Sync HP from combatState to player before applying Restoration
+            if (combatState && player) {
+                player.hp = Math.min(player.maxHp, Math.round(combatState.player.hp * 10) / 10);
+            }
+            
             // Apply Restoration skill healing at end of combat (percentage-based)
             const totalSkills = calculateTotalSkills();
             if (totalSkills.Restoration > 0) {
@@ -7457,6 +8009,12 @@ Experience: ${enemy.exp}
             document.getElementById('player-hp-text').textContent = `${combatState.player.hp.toFixed(1)}/${combatState.player.maxHp.toFixed(1)}`;
             document.getElementById('enemy-health').style.width = enemyHealthPercent + '%';
             document.getElementById('enemy-hp-text').textContent = `${combatState.enemy.hp.toFixed(1)}/${combatState.enemy.maxHp.toFixed(1)}`;
+            
+            // Update enemy name
+            const enemyNameEl = document.getElementById('enemy-name');
+            if (enemyNameEl && combatState.enemy) {
+                enemyNameEl.textContent = combatState.enemy.name || 'Enemy';
+            }
             
             // Update turn counter display
             const turnDisplay = document.getElementById('turn-counter');
